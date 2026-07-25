@@ -1,0 +1,96 @@
+.app {
+  width: 100%;
+  max-width: 560px;
+  padding: 3rem 1.5rem;
+}
+
+.app__header h1 {
+  margin: 0;
+  font-size: 2.75rem;
+  background: linear-gradient(90deg, #38bdf8, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.app__header p {
+  margin: 0.25rem 0 2rem;
+  color: #94a3b8;
+}
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.composer__input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.composer__input:focus {
+  outline: 2px solid #38bdf8;
+  border-color: transparent;
+}
+
+.composer__button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.composer__button:hover {
+  opacity: 0.9;
+}
+
+.notes__empty {
+  color: #64748b;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.notes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notes__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+}
+
+.notes__delete {
+  border: none;
+  background: transparent;
+  color: #f87171;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app__footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+}
