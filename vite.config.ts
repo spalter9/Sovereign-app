@@ -2,10 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
+// When building for GitHub Pages the site is served from
+// https://<user>.github.io/Sovereign-app/, so production assets need the
+// "/Sovereign-app/" base path. Local dev (`vite`) keeps serving from "/".
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/Sovereign-app/' : '/',
   plugins: [react()],
   server: {
     host: true,
     port: 5173,
   },
-})
+}))
