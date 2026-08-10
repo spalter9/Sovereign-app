@@ -1,6 +1,6 @@
 # Sovereign-app
 
-A minimal, modern web app scaffold built with **Vite + React + TypeScript**. It ships with a small interactive notes feature so the development environment can be run and verified end-to-end.
+A minimal **Vite + React + TypeScript** single-page app presenting the SSP / Sureal concept with a surreal landing-page layout.
 
 ## Requirements
 
