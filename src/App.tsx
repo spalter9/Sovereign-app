@@ -1,74 +1,38 @@
 import { useState } from 'react'
-import './App.css'
+import { MasterEngine } from './components/engine/MasterEngine'
+import { PortalGateway } from './components/landing/PortalGateway'
+import { CatalogVault } from './components/vault/CatalogVault'
+import type { PortalId, SelectedView } from './types/portal'
 
-interface Note {
-  id: number
-  text: string
-}
-
+/**
+ * Root router for "/".
+ * Default / refresh always lands on the Dual-Portal Gateway.
+ * Inner sites mount only after passkey unlock sets `selectedView`.
+ */
 function App() {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [draft, setDraft] = useState('')
+  const [selectedPortalId, setSelectedPortalId] = useState<PortalId | null>(null)
+  const [selectedView, setSelectedView] = useState<SelectedView>(null)
 
-  const addNote = () => {
-    const text = draft.trim()
-    if (!text) return
-    setNotes((prev) => [{ id: Date.now(), text }, ...prev])
-    setDraft('')
+  const returnToGateway = () => {
+    setSelectedView(null)
+    setSelectedPortalId(null)
   }
 
-  const removeNote = (id: number) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id))
+  if (selectedView === 'engine') {
+    return <MasterEngine onExit={returnToGateway} />
   }
 
+  if (selectedView === 'vault') {
+    return <CatalogVault onBackToGateway={returnToGateway} />
+  }
+
+  // Permanent opening screen — engine/vault are not mounted here.
   return (
-    <main className="app">
-      <header className="app__header">
-        <h1>Sovereign</h1>
-        <p>Your own private notes, owned by you.</p>
-      </header>
-
-      <section className="composer">
-        <input
-          className="composer__input"
-          value={draft}
-          placeholder="Write a note…"
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addNote()
-          }}
-          aria-label="Note text"
-        />
-        <button className="composer__button" onClick={addNote}>
-          Add note
-        </button>
-      </section>
-
-      <section className="notes" aria-label="Notes list">
-        {notes.length === 0 ? (
-          <p className="notes__empty">No notes yet. Add your first one above.</p>
-        ) : (
-          <ul className="notes__list">
-            {notes.map((note) => (
-              <li key={note.id} className="notes__item">
-                <span>{note.text}</span>
-                <button
-                  className="notes__delete"
-                  onClick={() => removeNote(note.id)}
-                  aria-label={`Delete note: ${note.text}`}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <footer className="app__footer">
-        {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-      </footer>
-    </main>
+    <PortalGateway
+      selectedPortalId={selectedPortalId}
+      onSelectPortal={setSelectedPortalId}
+      onUnlock={(portalId) => setSelectedView(portalId)}
+    />
   )
 }
 
