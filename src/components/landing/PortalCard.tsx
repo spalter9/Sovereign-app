@@ -62,7 +62,7 @@ export function PortalCard({
           ].join(' ')}
           aria-hidden
         />
-        {selected ? 'Selected' : 'Enter Gateway'}
+        {selected ? 'Selected' : 'Select Gateway'}
       </div>
     </button>
   )

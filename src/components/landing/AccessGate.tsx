@@ -119,7 +119,7 @@ export function AccessGate({ portal, onSuccess }: AccessGateProps) {
             className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-3 text-sm text-emerald-200"
           >
             <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
-            <span>Access granted. Routing to dashboard…</span>
+            <span>Access granted. Opening gateway…</span>
           </div>
         )}
 

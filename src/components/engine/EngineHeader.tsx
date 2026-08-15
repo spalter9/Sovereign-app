@@ -33,7 +33,7 @@ export function EngineHeader({ onExit }: EngineHeaderProps) {
         className="inline-flex w-fit items-center gap-2 rounded-lg border border-border-subtle bg-void-elevated/70 px-3 py-2 text-sm text-text-muted transition-colors hover:border-cyan-signal/35 hover:text-cyan-signal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-signal/60"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden />
-        Exit Engine
+        Back to Portal Selection
       </button>
     </header>
   )

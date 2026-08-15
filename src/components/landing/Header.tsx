@@ -5,18 +5,18 @@ export function Header() {
     <header className="relative z-10 flex items-center justify-between gap-4 px-1 py-2">
       <div className="flex items-center gap-3">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-signal/30 bg-slate-panel/80 shadow-[0_0_20px_rgba(34,211,238,0.15)]"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-signal/30 bg-slate-panel/80 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
           aria-hidden
         >
           <span className="font-display text-sm font-bold tracking-tight text-cyan-signal">
-            ST
+            SET
           </span>
         </div>
         <div>
           <p className="font-display text-lg font-semibold tracking-tight text-text-primary sm:text-xl">
-            Spalter Tech
+            Spalter Entertainment Technologies
           </p>
-          <p className="text-xs tracking-wide text-text-muted">SSP Secure Access</p>
+          <p className="text-xs tracking-wide text-text-muted">Dual-Portal Selection Gateway</p>
         </div>
       </div>
 
