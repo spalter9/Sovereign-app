@@ -77,8 +77,10 @@ export function AccessGate({ portal, onSuccess }: AccessGateProps) {
           </label>
           <input
             id={inputId}
-            type="password"
-            autoComplete="one-time-code"
+            type="text"
+            name="accessCode"
+            autoComplete="off"
+            spellCheck={false}
             inputMode="text"
             value={code}
             disabled={loading || success}
@@ -86,11 +88,11 @@ export function AccessGate({ portal, onSuccess }: AccessGateProps) {
               setCode(e.target.value)
               if (error) setError(null)
             }}
-            placeholder="••••••••"
+            placeholder="Enter access code"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errorId : undefined}
             className={[
-              'w-full rounded-xl border bg-void/70 px-4 py-3.5 font-display text-base tracking-[0.2em] text-text-primary placeholder:tracking-normal placeholder:text-text-muted/50',
+              'w-full rounded-xl border bg-void/70 px-4 py-3.5 font-display text-base tracking-[0.18em] text-text-primary placeholder:tracking-normal placeholder:text-text-muted/50',
               'outline-none transition-all duration-200',
               'focus:border-cyan-signal/50 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.15)]',
               error
