@@ -1,18 +1,79 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  color-scheme: dark;
+@import "tailwindcss";
+
+@theme {
+  --color-void: #0a0d14;
+  --color-void-elevated: #10151f;
+  --color-slate-panel: #141a26;
+  --color-border-subtle: rgba(148, 163, 184, 0.16);
+  --color-border-glow: rgba(34, 211, 238, 0.45);
+  --color-cyan-signal: #22d3ee;
+  --color-indigo-signal: #6366f1;
+  --color-text-primary: #e8eef9;
+  --color-text-muted: #8b9bb8;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-body);
+    background: var(--color-void);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: rgba(34, 211, 238, 0.28);
+    color: #f8fafc;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at 20% 0%, #1e293b, #0f172a 60%);
-  color: #e2e8f0;
-  display: flex;
-  justify-content: center;
+@layer utilities {
+  .glass-panel {
+    background: linear-gradient(
+      145deg,
+      rgba(20, 26, 38, 0.78),
+      rgba(10, 13, 20, 0.55)
+    );
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.35),
+      0 0 24px rgba(99, 102, 241, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .mesh-bg {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.18), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 90% 20%, rgba(34, 211, 238, 0.08), transparent 50%),
+      radial-gradient(ellipse 50% 35% at 10% 70%, rgba(99, 102, 241, 0.1), transparent 55%),
+      linear-gradient(180deg, #0a0d14 0%, #0c1018 50%, #0a0d14 100%);
+  }
+
+  .grid-overlay {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+  }
 }
