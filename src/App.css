@@ -1,96 +1,443 @@
-.app {
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.stage {
+  position: relative;
+  min-height: 100vh;
   width: 100%;
-  max-width: 560px;
-  padding: 3rem 1.5rem;
+  overflow: hidden;
 }
 
-.app__header h1 {
+/* ─── Stage 1: Lock Screen ───────────────────────────────────────── */
+
+.stage--lock {
+  display: grid;
+  place-items: center;
+  background: #090d16;
+  padding: 2rem 1.25rem;
+}
+
+.lock-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -20% auto auto 50%;
+  width: min(72vw, 720px);
+  height: min(72vw, 720px);
+  transform: translateX(-50%);
+  background:
+    radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, transparent 62%),
+    radial-gradient(circle at 30% 70%, rgba(148, 163, 184, 0.08) 0%, transparent 55%);
+  animation: glow-breathe 5.5s ease-in-out infinite;
+}
+
+.lock-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 440px);
+  text-align: center;
+  animation: lock-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lock-brand {
   margin: 0;
-  font-size: 2.75rem;
-  background: linear-gradient(90deg, #38bdf8, #a78bfa);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 3.4vw, 1.55rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: #f1f5f9;
+  text-shadow: 0 0 28px rgba(56, 189, 248, 0.28);
 }
 
-.app__header p {
-  margin: 0.25rem 0 2rem;
+.lock-status {
+  margin: 0.85rem 0 2.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: #7dd3fc;
+  text-shadow: 0 0 18px rgba(125, 211, 252, 0.35);
+}
+
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+.lock-input {
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lock-input::placeholder {
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.lock-input:focus {
+  outline: none;
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15), 0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+.lock-input--error {
+  border-color: rgba(248, 113, 113, 0.85);
+  animation: shake 0.45s ease;
+}
+
+.lock-submit {
+  padding: 0.95rem 1.25rem;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 0.35rem;
+  background: linear-gradient(180deg, rgba(14, 116, 144, 0.55), rgba(8, 47, 73, 0.9));
+  color: #f8fafc;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.lock-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px rgba(56, 189, 248, 0.28);
+}
+
+.lock-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.lock-error {
+  margin: 0;
+  min-height: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  color: #f87171;
+}
+
+.lock-error--spacer {
+  visibility: hidden;
+}
+
+.stage--unlocking .lock-panel {
+  animation: unlock-fade 0.5s ease forwards;
+}
+
+.stage--unlocking .lock-glow {
+  animation: unlock-flare 0.5s ease forwards;
+}
+
+/* ─── Stage 2: Dual Portal Choice ────────────────────────────────── */
+
+.stage--portals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(56, 189, 248, 0.12), transparent 50%),
+    #090d16;
+  padding: 3rem 1.5rem;
+  animation: portals-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.portals-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: auto 10% 5% 10%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.08), transparent 70%);
+}
+
+.portals-header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 40rem;
+}
+
+.portals-kicker {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.portals-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.35rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.portal-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  width: min(100%, 960px);
+}
+
+.portal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+  min-height: 220px;
+  padding: 1.75rem 1.6rem;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(9, 13, 22, 0.96));
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.portal-card:hover,
+.portal-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 12px 40px rgba(2, 8, 23, 0.55), 0 0 28px rgba(56, 189, 248, 0.12);
+  outline: none;
+}
+
+.portal-card__label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #38bdf8;
+}
+
+.portal-card__title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: #f1f5f9;
+}
+
+.portal-card__desc {
+  margin-top: auto;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.5;
   color: #94a3b8;
 }
 
-.composer {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
+/* ─── Stage 3: Destinations ──────────────────────────────────────── */
 
-.composer__input {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid #334155;
-  background: #1e293b;
-  color: #e2e8f0;
-  font-size: 1rem;
-}
-
-.composer__input:focus {
-  outline: 2px solid #38bdf8;
-  border-color: transparent;
-}
-
-.composer__button {
-  padding: 0.75rem 1.25rem;
-  border: none;
-  border-radius: 0.75rem;
-  background: linear-gradient(90deg, #38bdf8, #6366f1);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.composer__button:hover {
-  opacity: 0.9;
-}
-
-.notes__empty {
-  color: #64748b;
-  text-align: center;
-  padding: 2rem 0;
-}
-
-.notes__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.stage--destination {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  background:
+    radial-gradient(ellipse at 80% 0%, rgba(56, 189, 248, 0.1), transparent 45%),
+    #090d16;
+  animation: portals-enter 0.4s ease both;
 }
 
-.notes__item {
+.dest-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1rem;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 0.75rem;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(9, 13, 22, 0.92);
+  backdrop-filter: blur(8px);
 }
 
-.notes__delete {
-  border: none;
-  background: transparent;
-  color: #f87171;
-  font-size: 1.4rem;
-  line-height: 1;
+.dest-header__eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.dest-header__title {
+  margin: 0;
+  max-width: 42rem;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 2.4vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.dest-lock {
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 0.35rem;
+  background: rgba(127, 29, 29, 0.25);
+  color: #fecaca;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.app__footer {
-  margin-top: 1.5rem;
-  text-align: center;
+.dest-lock:hover {
+  background: rgba(153, 27, 27, 0.45);
+  border-color: rgba(248, 113, 113, 0.7);
+  transform: translateY(-1px);
+}
+
+.dest-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.dest-lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: #e2e8f0;
+}
+
+.dest-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
   color: #64748b;
-  font-size: 0.875rem;
+}
+
+/* ─── Motion ─────────────────────────────────────────────────────── */
+
+@keyframes glow-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+@keyframes lock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes unlock-fade {
+  to {
+    opacity: 0;
+    transform: scale(1.03);
+    filter: blur(4px);
+  }
+}
+
+@keyframes unlock-flare {
+  to {
+    opacity: 1.4;
+    transform: translateX(-50%) scale(1.25);
+  }
+}
+
+@keyframes portals-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .portal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dest-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dest-lock {
+    width: 100%;
+  }
 }
