@@ -57,8 +57,9 @@ function App() {
             <input
               id="passcode"
               className={`lock-input${hasError ? ' lock-input--error' : ''}`}
-              type="password"
-              autoComplete="current-password"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
               placeholder="Enter Passcode (e.g. SPALTER)"
               value={passcode}
               onChange={(e) => {
