@@ -11,7 +11,7 @@ export function MusicModule() {
   const [spatial, setSpatial] = useState(0.65)
   const [lightningBurst, setLightningBurst] = useState(0)
 
-  const catalogEarnings = useMemo(
+  const libraryEarnings = useMemo(
     () =>
       MUSIC_TRACKS.reduce(
         (sum, track) => sum + track.streams * track.perStream,
@@ -24,7 +24,7 @@ export function MusicModule() {
     <div className="tab-panel-enter grid grid-cols-1 gap-4 lg:grid-cols-2">
       <SectionCard
         title="Layer-2 Lightning Micropayments"
-        subtitle="Per-stream settlements route in real time across the catalog."
+        subtitle="Per-stream settlements route in real time across the rights library."
         glow
         action={
           <button
@@ -85,9 +85,9 @@ export function MusicModule() {
           </table>
         </div>
         <p className="mt-3 text-sm text-text-muted">
-          Catalog accrued:{' '}
+          Library accrued:{' '}
           <span className="font-display font-semibold text-text-primary">
-            {formatUsd(catalogEarnings + lightningBurst * 120 * 0.004)}
+            {formatUsd(libraryEarnings + lightningBurst * 120 * 0.004)}
           </span>
         </p>
       </SectionCard>

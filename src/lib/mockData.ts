@@ -64,7 +64,7 @@ export const MUSIC_TRACKS: MusicTrack[] = [
   },
   {
     id: 't3',
-    title: 'We Fit Together (Catalog)',
+    title: 'We Fit Together (Remaster)',
     isrc: 'US-SPA-26-00003',
     streams: 2_401_880,
     perStream: 0.0045,

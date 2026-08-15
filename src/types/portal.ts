@@ -1,4 +1,4 @@
-export type PortalId = 'ssp' | 'catalog'
+export type PortalId = 'ssp'
 
 export interface PortalOption {
   id: PortalId
@@ -7,19 +7,11 @@ export interface PortalOption {
   destination: string
 }
 
-export const PORTALS: PortalOption[] = [
-  {
-    id: 'ssp',
-    title: 'Sovereign Sign Protocol (SSP) & Technology Gateway',
-    subtitle: 'Protocol Infrastructure, Developer SDKs & Node Services',
-    destination: 'SSP Technology Gateway',
-  },
-  {
-    id: 'catalog',
-    title: 'Spalter Catalog & Audio Systems',
-    subtitle: 'Production Archives, Masters Registry & Publishing Hub',
-    destination: 'Spalter Catalog Hub',
-  },
-]
+export const SSP_PORTAL: PortalOption = {
+  id: 'ssp',
+  title: 'Sovereign Sign Protocol (SSP) & Technology Gateway',
+  subtitle: 'Protocol Infrastructure, Developer SDKs & Node Services',
+  destination: 'SSP Master Engine',
+}
 
 export const VALID_ACCESS_CODES = ['SSP2026', 'SPALTER'] as const

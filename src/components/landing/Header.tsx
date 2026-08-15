@@ -16,7 +16,7 @@ export function Header() {
           <p className="font-display text-lg font-semibold tracking-tight text-text-primary sm:text-xl">
             Spalter Tech
           </p>
-          <p className="text-xs tracking-wide text-text-muted">Secure Portal Access</p>
+          <p className="text-xs tracking-wide text-text-muted">SSP Secure Access</p>
         </div>
       </div>
 
