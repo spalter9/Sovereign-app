@@ -1,7 +1,9 @@
 import { FormEvent, useState } from 'react'
+import { MasterEngine } from './components/engine/MasterEngine'
+import { CatalogVault } from './components/vault/CatalogVault'
 import './App.css'
 
-type Stage = 'lock' | 'portals' | 'ssp' | 'catalog'
+type Stage = 'lock' | 'portals' | 'master' | 'surealizer'
 
 const VALID_PASSCODES = new Set(['SPALTER', 'SSP2026'])
 
@@ -101,11 +103,11 @@ function App() {
           <button
             type="button"
             className="portal-card"
-            onClick={() => setStage('ssp')}
+            onClick={() => setStage('master')}
           >
             <span className="portal-card__label">Gateway 01</span>
             <span className="portal-card__title">
-              SOVEREIGN SIGN PROTOCOL (SSP) MASTER ENGINE
+              SOVEREIGN SIGN PROTOCOL (SSP) MASTERING ENGINE
             </span>
             <span className="portal-card__desc">
               Multi-Industry Infrastructure, AI Data Licensing &amp; Real-Time IRS
@@ -116,14 +118,15 @@ function App() {
           <button
             type="button"
             className="portal-card"
-            onClick={() => setStage('catalog')}
+            onClick={() => setStage('surealizer')}
           >
             <span className="portal-card__label">Gateway 02</span>
             <span className="portal-card__title">
-              SPALTER CATALOG &amp; AUDIO VAULT
+              SUREALIZER ENGINE
             </span>
             <span className="portal-card__desc">
-              Master Recordings, Publishing Administration &amp; Stem Systems
+              Spalter Catalog &amp; Audio Vault — Master Recordings, Publishing
+              Administration &amp; Stem Systems
             </span>
           </button>
         </div>
@@ -131,37 +134,11 @@ function App() {
     )
   }
 
-  const isSsp = stage === 'ssp'
+  if (stage === 'master') {
+    return <MasterEngine onExit={handleLock} />
+  }
 
-  return (
-    <div className={`stage stage--destination stage--${stage}`}>
-      <header className="dest-header">
-        <div className="dest-header__brand">
-          <p className="dest-header__eyebrow">Spalter Entertainment Technologies</p>
-          <h1 className="dest-header__title">
-            {isSsp
-              ? 'SOVEREIGN SIGN PROTOCOL (SSP) MASTER ENGINE'
-              : 'SPALTER CATALOG & AUDIO VAULT'}
-          </h1>
-        </div>
-        <button type="button" className="dest-lock" onClick={handleLock}>
-          Lock / Sign Out
-        </button>
-      </header>
-
-      <main className="dest-body">
-        <p className="dest-lead">
-          {isSsp
-            ? 'Multi-Industry Infrastructure, AI Data Licensing & Real-Time IRS Tax Terminal.'
-            : 'Master Recordings, Publishing Administration & Stem Systems.'}
-        </p>
-        <p className="dest-note">
-          Authorized session active. Use Lock / Sign Out to return to the security
-          gate.
-        </p>
-      </main>
-    </div>
-  )
+  return <CatalogVault onBackToGateway={handleLock} />
 }
 
 export default App
