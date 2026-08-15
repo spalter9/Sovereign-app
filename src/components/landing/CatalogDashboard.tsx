@@ -1,12 +1,12 @@
 import { ArrowLeft, LayoutDashboard } from 'lucide-react'
-import type { PortalOption } from '../types/portal'
+import type { PortalOption } from '../../types/portal'
 
-interface DashboardProps {
+interface CatalogDashboardProps {
   portal: PortalOption
   onExit: () => void
 }
 
-export function Dashboard({ portal, onExit }: DashboardProps) {
+export function CatalogDashboard({ portal, onExit }: CatalogDashboardProps) {
   return (
     <div className="mesh-bg relative flex min-h-screen flex-col">
       <div className="pointer-events-none absolute inset-0 grid-overlay" aria-hidden />

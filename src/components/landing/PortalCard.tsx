@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import type { PortalId } from '../types/portal'
+import type { PortalId } from '../../types/portal'
 
 interface PortalCardProps {
   id: PortalId

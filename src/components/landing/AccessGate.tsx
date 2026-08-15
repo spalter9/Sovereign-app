@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { AlertCircle, KeyRound, Loader2, ShieldCheck } from 'lucide-react'
-import { VALID_ACCESS_CODES, type PortalId, type PortalOption } from '../types/portal'
+import { VALID_ACCESS_CODES, type PortalId, type PortalOption } from '../../types/portal'
 
 interface AccessGateProps {
   portal: PortalOption

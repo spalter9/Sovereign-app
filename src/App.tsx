@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { AudioLines, Shield } from 'lucide-react'
-import { AccessGate } from './components/AccessGate'
-import { Dashboard } from './components/Dashboard'
-import { Header } from './components/Header'
-import { PortalCard } from './components/PortalCard'
+import { MasterEngine } from './components/engine/MasterEngine'
+import { AccessGate } from './components/landing/AccessGate'
+import { CatalogDashboard } from './components/landing/CatalogDashboard'
+import { Header } from './components/landing/Header'
+import { PortalCard } from './components/landing/PortalCard'
 import { PORTALS, type PortalId } from './types/portal'
 
 const PORTAL_ICONS = {
@@ -18,9 +19,20 @@ function App() {
   const selectedPortal = PORTALS.find((p) => p.id === selectedId) ?? null
   const activePortal = PORTALS.find((p) => p.id === authenticatedPortal) ?? null
 
+  if (activePortal?.id === 'ssp') {
+    return (
+      <MasterEngine
+        onExit={() => {
+          setAuthenticatedPortal(null)
+          setSelectedId(null)
+        }}
+      />
+    )
+  }
+
   if (activePortal) {
     return (
-      <Dashboard
+      <CatalogDashboard
         portal={activePortal}
         onExit={() => {
           setAuthenticatedPortal(null)

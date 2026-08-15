@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-void: #0a0d14;
-  --color-void-elevated: #10151f;
-  --color-slate-panel: #141a26;
-  --color-border-subtle: rgba(148, 163, 184, 0.16);
-  --color-border-glow: rgba(34, 211, 238, 0.45);
-  --color-cyan-signal: #22d3ee;
-  --color-indigo-signal: #6366f1;
+  --color-void: #090d16;
+  --color-void-elevated: #0e1420;
+  --color-slate-panel: #121a28;
+  --color-border-subtle: rgba(148, 163, 184, 0.14);
+  --color-border-glow: rgba(0, 240, 255, 0.4);
+  --color-cyan-signal: #00f0ff;
+  --color-gold-signal: #ffd700;
+  --color-emerald-signal: #10b981;
+  --color-indigo-signal: #4f6ef7;
   --color-text-primary: #e8eef9;
   --color-text-muted: #8b9bb8;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -33,12 +35,43 @@
   }
 
   ::selection {
-    background: rgba(34, 211, 238, 0.28);
+    background: rgba(0, 240, 255, 0.28);
     color: #f8fafc;
   }
 
   #root {
     min-height: 100vh;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0, 240, 255, 0.55), rgba(16, 185, 129, 0.45));
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #00f0ff;
+    border: 2px solid #090d16;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.65);
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #00f0ff;
+    border: 2px solid #090d16;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.65);
+    cursor: pointer;
   }
 }
 
@@ -46,8 +79,8 @@
   .glass-panel {
     background: linear-gradient(
       145deg,
-      rgba(20, 26, 38, 0.78),
-      rgba(10, 13, 20, 0.55)
+      rgba(18, 26, 40, 0.82),
+      rgba(9, 13, 22, 0.62)
     );
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -56,24 +89,60 @@
 
   .glow-ring {
     box-shadow:
-      0 0 0 1px rgba(34, 211, 238, 0.35),
-      0 0 24px rgba(99, 102, 241, 0.22),
+      0 0 0 1px rgba(0, 240, 255, 0.35),
+      0 0 24px rgba(0, 240, 255, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .glow-gold {
+    box-shadow:
+      0 0 0 1px rgba(255, 215, 0, 0.3),
+      0 0 20px rgba(255, 215, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .mesh-bg {
     background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.18), transparent 55%),
-      radial-gradient(ellipse 60% 40% at 90% 20%, rgba(34, 211, 238, 0.08), transparent 50%),
-      radial-gradient(ellipse 50% 35% at 10% 70%, rgba(99, 102, 241, 0.1), transparent 55%),
-      linear-gradient(180deg, #0a0d14 0%, #0c1018 50%, #0a0d14 100%);
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.1), transparent 55%),
+      radial-gradient(ellipse 55% 40% at 95% 15%, rgba(255, 215, 0, 0.06), transparent 50%),
+      radial-gradient(ellipse 50% 35% at 5% 75%, rgba(16, 185, 129, 0.08), transparent 55%),
+      linear-gradient(180deg, #090d16 0%, #0b101a 50%, #090d16 100%);
   }
 
   .grid-overlay {
     background-image:
-      linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
-    background-size: 64px 64px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+      linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, black 15%, transparent 78%);
+  }
+
+  .tab-panel-enter {
+    animation: tabFade 280ms ease-out;
+  }
+
+  @keyframes tabFade {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-line {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .flow-pulse {
+    animation: pulse-line 1.6s ease-in-out infinite;
   }
 }
