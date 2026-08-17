@@ -1,74 +1,84 @@
 import { useState } from 'react'
-import './App.css'
+import { AudioLines, Shield } from 'lucide-react'
+import { AccessGate } from './components/AccessGate'
+import { Dashboard } from './components/Dashboard'
+import { Header } from './components/Header'
+import { PortalCard } from './components/PortalCard'
+import { PORTALS, type PortalId } from './types/portal'
 
-interface Note {
-  id: number
-  text: string
-}
+const PORTAL_ICONS = {
+  ssp: Shield,
+  catalog: AudioLines,
+} as const
 
 function App() {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [draft, setDraft] = useState('')
+  const [selectedId, setSelectedId] = useState<PortalId | null>(null)
+  const [authenticatedPortal, setAuthenticatedPortal] = useState<PortalId | null>(null)
 
-  const addNote = () => {
-    const text = draft.trim()
-    if (!text) return
-    setNotes((prev) => [{ id: Date.now(), text }, ...prev])
-    setDraft('')
-  }
+  const selectedPortal = PORTALS.find((p) => p.id === selectedId) ?? null
+  const activePortal = PORTALS.find((p) => p.id === authenticatedPortal) ?? null
 
-  const removeNote = (id: number) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id))
+  if (activePortal) {
+    return (
+      <Dashboard
+        portal={activePortal}
+        onExit={() => {
+          setAuthenticatedPortal(null)
+          setSelectedId(null)
+        }}
+      />
+    )
   }
 
   return (
-    <main className="app">
-      <header className="app__header">
-        <h1>Sovereign</h1>
-        <p>Your own private notes, owned by you.</p>
-      </header>
+    <div className="mesh-bg relative min-h-screen overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 grid-overlay" aria-hidden />
 
-      <section className="composer">
-        <input
-          className="composer__input"
-          value={draft}
-          placeholder="Write a note…"
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addNote()
-          }}
-          aria-label="Note text"
-        />
-        <button className="composer__button" onClick={addNote}>
-          Add note
-        </button>
-      </section>
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-6 sm:px-8 sm:py-10">
+        <Header />
 
-      <section className="notes" aria-label="Notes list">
-        {notes.length === 0 ? (
-          <p className="notes__empty">No notes yet. Add your first one above.</p>
-        ) : (
-          <ul className="notes__list">
-            {notes.map((note) => (
-              <li key={note.id} className="notes__item">
-                <span>{note.text}</span>
-                <button
-                  className="notes__delete"
-                  onClick={() => removeNote(note.id)}
-                  aria-label={`Delete note: ${note.text}`}
-                >
-                  ×
-                </button>
-              </li>
+        <main className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl md:text-5xl">
+              Spalter Tech
+            </h1>
+            <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-text-muted sm:text-lg">
+              Select a secure portal to continue into protocol infrastructure or catalog systems.
+            </p>
+          </div>
+
+          <div
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5"
+            role="group"
+            aria-label="Portal selector"
+          >
+            {PORTALS.map((portal) => (
+              <PortalCard
+                key={portal.id}
+                id={portal.id}
+                title={portal.title}
+                subtitle={portal.subtitle}
+                icon={PORTAL_ICONS[portal.id]}
+                selected={selectedId === portal.id}
+                onSelect={setSelectedId}
+              />
             ))}
-          </ul>
-        )}
-      </section>
+          </div>
 
-      <footer className="app__footer">
-        {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-      </footer>
-    </main>
+          {selectedPortal && (
+            <AccessGate
+              key={selectedPortal.id}
+              portal={selectedPortal}
+              onSuccess={setAuthenticatedPortal}
+            />
+          )}
+        </main>
+
+        <footer className="pb-2 pt-4 text-center text-xs tracking-wide text-text-muted/70">
+          Spalter Tech · Encrypted gateway · Unauthorized access prohibited
+        </footer>
+      </div>
+    </div>
   )
 }
 

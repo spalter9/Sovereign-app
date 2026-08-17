@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 // When building for GitHub Pages the site is served from
@@ -7,9 +8,15 @@ import react from '@vitejs/plugin-react'
 // "/Sovereign-app/" base path. Local dev (`vite`) keeps serving from "/".
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/Sovereign-app/' : '/',
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     host: true,
     port: 5173,
+    strictPort: true,
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    strictPort: true,
   },
 }))
