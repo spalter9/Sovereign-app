@@ -11,14 +11,14 @@ A minimal, modern web app scaffold built with **Vite + React + TypeScript**. It 
 
 ```bash
 npm install      # install dependencies
-npm run dev      # start the dev server on http://localhost:5173
+npm start        # start the app on http://localhost:5173
 ```
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite dev server (hot reload). |
+| `npm start` / `npm run dev` | Start the Vite server on http://localhost:5173 (required port). |
 | `npm run build` | Type-check and produce a production build in `dist/`. |
-| `npm run preview` | Preview the production build locally. |
+| `npm run preview` | Preview the production build locally on http://localhost:4173. |
 | `npm run lint` | Run ESLint over the project. |

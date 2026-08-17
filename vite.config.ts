@@ -12,5 +12,11 @@ export default defineConfig(({ command }) => ({
   server: {
     host: true,
     port: 5173,
+    strictPort: true,
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    strictPort: true,
   },
 }))
