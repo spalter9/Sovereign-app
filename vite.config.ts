@@ -1,15 +1,23 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
-// When building for GitHub Pages the site is served from
-// https://<user>.github.io/Sovereign-app/, so production assets need the
-// "/Sovereign-app/" base path. Local dev (`vite`) keeps serving from "/".
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/Sovereign-app/' : '/',
-  plugins: [react()],
-  server: {
-    host: true,
-    port: 5173,
-  },
-}))
+// Custom domain (sspengine.com) and local preview both serve from "/".
+// Override with VITE_BASE=/Sovereign-app/ only for GitHub Pages project URLs.
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  return {
+    base: env.VITE_BASE || '/',
+    plugins: [react(), tailwindcss()],
+    server: {
+      host: true,
+      port: 5173,
+      strictPort: true,
+    },
+    preview: {
+      host: true,
+      port: 4173,
+      strictPort: true,
+    },
+  }
+})

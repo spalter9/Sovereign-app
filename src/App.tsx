@@ -1,74 +1,120 @@
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
+import { SspEngineConsole } from './components/console/SspEngineConsole'
+import { MasterEngine } from './components/engine/MasterEngine'
+import { CatalogVault } from './components/vault/CatalogVault'
 import './App.css'
 
-interface Note {
-  id: number
-  text: string
-}
+type Stage = 'lock' | 'console' | 'master' | 'surealizer'
+
+const VALID_PASSCODES = new Set(['SPALTER', 'SSP2026', '8888'])
 
 function App() {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [draft, setDraft] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [stage, setStage] = useState<Stage>('lock')
+  const [passcode, setPasscode] = useState('')
+  const [hasError, setHasError] = useState(false)
+  const [isUnlocking, setIsUnlocking] = useState(false)
 
-  const addNote = () => {
-    const text = draft.trim()
-    if (!text) return
-    setNotes((prev) => [{ id: Date.now(), text }, ...prev])
-    setDraft('')
+  const handleUnlock = (event: FormEvent) => {
+    event.preventDefault()
+    const normalized = passcode.trim().toUpperCase()
+
+    if (!VALID_PASSCODES.has(normalized)) {
+      setHasError(true)
+      return
+    }
+
+    setHasError(false)
+    setIsUnlocking(true)
+
+    window.setTimeout(() => {
+      setIsAuthenticated(true)
+      setStage('console')
+      setIsUnlocking(false)
+      setPasscode('')
+    }, 420)
   }
 
-  const removeNote = (id: number) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id))
+  const handleLock = () => {
+    setIsAuthenticated(false)
+    setStage('lock')
+    setPasscode('')
+    setHasError(false)
+    setIsUnlocking(false)
+  }
+
+  if (!isAuthenticated || stage === 'lock') {
+    return (
+      <div
+        className={`stage stage--lock${isUnlocking ? ' stage--unlocking' : ''}${hasError ? ' stage--error' : ''}`}
+      >
+        <div className="lock-glow" aria-hidden="true" />
+        <div className="lock-panel">
+          <p className="lock-brand">SSPENGINE.COM</p>
+          <p className="lock-status">Sovereign Sign Protocol // Restricted Console Access</p>
+
+          <form className="lock-form" onSubmit={handleUnlock} noValidate>
+            <label className="visually-hidden" htmlFor="passcode">
+              Passcode
+            </label>
+            <input
+              id="passcode"
+              className={`lock-input${hasError ? ' lock-input--error' : ''}`}
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="Enter Passcode"
+              value={passcode}
+              onChange={(e) => {
+                setPasscode(e.target.value)
+                if (hasError) setHasError(false)
+              }}
+              disabled={isUnlocking}
+              aria-invalid={hasError}
+              aria-describedby={hasError ? 'passcode-error' : undefined}
+            />
+            <button className="lock-submit" type="submit" disabled={isUnlocking}>
+              Unlock Engine
+            </button>
+            {hasError ? (
+              <p id="passcode-error" className="lock-error" role="alert">
+                Invalid Access Code
+              </p>
+            ) : (
+              <p className="lock-error lock-error--spacer" aria-hidden="true">
+                &nbsp;
+              </p>
+            )}
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  if (stage === 'console') {
+    return (
+      <SspEngineConsole
+        onLock={handleLock}
+        onOpenMaster={() => setStage('master')}
+        onOpenSurealizer={() => setStage('surealizer')}
+      />
+    )
+  }
+
+  if (stage === 'master') {
+    return (
+      <MasterEngine
+        onExit={handleLock}
+        onBackToConsole={() => setStage('console')}
+      />
+    )
   }
 
   return (
-    <main className="app">
-      <header className="app__header">
-        <h1>Sovereign</h1>
-        <p>Your own private notes, owned by you.</p>
-      </header>
-
-      <section className="composer">
-        <input
-          className="composer__input"
-          value={draft}
-          placeholder="Write a note…"
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addNote()
-          }}
-          aria-label="Note text"
-        />
-        <button className="composer__button" onClick={addNote}>
-          Add note
-        </button>
-      </section>
-
-      <section className="notes" aria-label="Notes list">
-        {notes.length === 0 ? (
-          <p className="notes__empty">No notes yet. Add your first one above.</p>
-        ) : (
-          <ul className="notes__list">
-            {notes.map((note) => (
-              <li key={note.id} className="notes__item">
-                <span>{note.text}</span>
-                <button
-                  className="notes__delete"
-                  onClick={() => removeNote(note.id)}
-                  aria-label={`Delete note: ${note.text}`}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <footer className="app__footer">
-        {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-      </footer>
-    </main>
+    <CatalogVault
+      onBackToGateway={handleLock}
+      onBackToConsole={() => setStage('console')}
+    />
   )
 }
 
