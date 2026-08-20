@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { AudioTransport } from './AudioTransport'
 
 interface SspEngineConsoleProps {
   onLock: () => void
@@ -99,24 +100,8 @@ export function SspEngineConsole({
 
       <main className="mx-auto w-full max-w-7xl flex-1 space-y-6 p-6 pb-20 md:p-10">
         {activeTab === 0 && (
-          <Panel title="Transport & 3D Audio Visualizer" badge="ONLINE & LOCKED">
-            <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
-              <div className="absolute inset-0 flex items-center justify-around opacity-30" aria-hidden>
-                <div className="h-24 w-1 animate-pulse bg-cyan-400" />
-                <div className="h-32 w-1 animate-bounce bg-emerald-400" />
-                <div className="h-16 w-1 animate-pulse bg-purple-400" />
-                <div className="h-28 w-1 animate-bounce bg-cyan-400" />
-                <div className="h-20 w-1 animate-pulse bg-amber-400" />
-              </div>
-              <p className="z-10 text-xs font-black tracking-wider text-slate-400">
-                32-BIT WAVEFORM &amp; WEBGL FREQUENCY RENDERER ACTIVE
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Action onClick={() => setStatus('STREAM // PLAYING')}>▶ Play Stream</Action>
-              <Ghost onClick={() => setStatus('STREAM // PAUSED')}>⏸ Pause</Ghost>
-              <Ghost onClick={() => setStatus('STREAM // LOOP')}>🔁 Loop</Ghost>
-            </div>
+          <Panel title="Transport & Audio Ingest" badge="READY">
+            <AudioTransport onStatus={setStatus} />
           </Panel>
         )}
 
