@@ -1,6 +1,7 @@
-# Sovereign-app
+# SSPengine.com
 
-A minimal **Vite + React + TypeScript** single-page app presenting the SSP / Sureal concept with a surreal landing-page layout.
+Sovereign Sign Protocol Engine — Vite + React + TypeScript console for
+mastering, stems, Polygon settlement, and multi-industry SSP infrastructure.
 
 ## Requirements
 
@@ -10,15 +11,24 @@ A minimal **Vite + React + TypeScript** single-page app presenting the SSP / Sur
 ## Getting started
 
 ```bash
-npm install      # install dependencies
-npm run dev      # start the dev server on http://localhost:5173
+npm install
+npm start          # http://localhost:5173 (strict)
+# or
+npm run dev
 ```
+
+Unlock with `8888`, `SPALTER`, or `SSP2026`.
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite dev server (hot reload). |
-| `npm run build` | Type-check and produce a production build in `dist/`. |
-| `npm run preview` | Preview the production build locally. |
-| `npm run lint` | Run ESLint over the project. |
+| `npm start` / `npm run dev` | Dev server on port **5173** (strict). |
+| `npm run build` | Type-check + production build → `dist/`. |
+| `npm run preview` | Preview production build on **4173**. |
+| `npm run lint` | ESLint. |
+
+## Deploy
+
+- **Custom domain (sspengine.com):** default Vite `base` is `/` (see `vercel.json`).
+- **GitHub Pages project URL:** build with `VITE_BASE=/Sovereign-app/ npm run build`.

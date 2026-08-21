@@ -35,7 +35,8 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        # Project Pages URL needs the repo base path; custom domains use `/`.
+        run: VITE_BASE=/Sovereign-app/ npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
