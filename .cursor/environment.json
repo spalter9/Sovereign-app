@@ -1,0 +1,17 @@
+{
+  "name": "Sovereign-app",
+  "install": "export PATH=\"$HOME/.nvm/versions/node/v22.22.2/bin:$PATH\" && npm install",
+  "ports": [
+    {
+      "name": "vite-dev-server",
+      "port": 5173
+    }
+  ],
+  "terminals": [
+    {
+      "name": "vite",
+      "command": "export PATH=\"$HOME/.nvm/versions/node/v22.22.2/bin:$PATH\" && npm start",
+      "description": "Vite dev server for Spalter Tech (http://localhost:5173)"
+    }
+  ]
+}

@@ -10,12 +10,12 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/Sovereign-app/' : '/',
   plugins: [react(), tailwindcss()],
   server: {
-    host: true,
+    host: '0.0.0.0',
     port: 5173,
     strictPort: true,
   },
   preview: {
-    host: true,
+    host: '0.0.0.0',
     port: 4173,
     strictPort: true,
   },
