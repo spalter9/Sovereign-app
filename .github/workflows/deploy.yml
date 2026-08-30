@@ -1,10 +1,9 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Publish whenever the app changes on the main branch.
-  push:
-    branches: ["main"]
-  # Allow running this workflow manually from the Actions tab.
+  # Disabled: this repo deploys via Vercel, not GitHub Pages. GitHub Pages
+  # was never enabled for this repo, so the auto-enable step below always
+  # fails on every push. Kept manual-only in case Pages is wanted later.
   workflow_dispatch:
 
 # Permissions needed for the GitHub Pages deployment.
