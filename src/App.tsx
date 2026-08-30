@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { SspEngineConsole } from './components/console/SspEngineConsole'
 import { MasterEngine } from './components/engine/MasterEngine'
 import { CatalogVault } from './components/vault/CatalogVault'
+import { SpaltyAssistant } from './components/SpaltyAssistant'
 import './App.css'
 
 type Stage = 'lock' | 'console' | 'master' | 'surealizer'
@@ -93,28 +94,37 @@ function App() {
 
   if (stage === 'console') {
     return (
-      <SspEngineConsole
-        onLock={handleLock}
-        onOpenMaster={() => setStage('master')}
-        onOpenSurealizer={() => setStage('surealizer')}
-      />
+      <>
+        <SspEngineConsole
+          onLock={handleLock}
+          onOpenMaster={() => setStage('master')}
+          onOpenSurealizer={() => setStage('surealizer')}
+        />
+        <SpaltyAssistant />
+      </>
     )
   }
 
   if (stage === 'master') {
     return (
-      <MasterEngine
-        onExit={handleLock}
-        onBackToConsole={() => setStage('console')}
-      />
+      <>
+        <MasterEngine
+          onExit={handleLock}
+          onBackToConsole={() => setStage('console')}
+        />
+        <SpaltyAssistant />
+      </>
     )
   }
 
   return (
-    <CatalogVault
-      onBackToGateway={handleLock}
-      onBackToConsole={() => setStage('console')}
-    />
+    <>
+      <CatalogVault
+        onBackToGateway={handleLock}
+        onBackToConsole={() => setStage('console')}
+      />
+      <SpaltyAssistant />
+    </>
   )
 }
 
