@@ -7,7 +7,7 @@ import './App.css'
 
 type Stage = 'lock' | 'console' | 'master' | 'surealizer'
 
-const VALID_PASSCODES = new Set(['SPALTER', 'SSP2026', '8888'])
+const VALID_PASSCODES = new Set(['SPALTER', 'SSP2026', '1967'])
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
