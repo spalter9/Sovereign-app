@@ -292,8 +292,8 @@ export function ExaminerModule() {
               </p>
               <span className="font-mono text-[10px] tabular-nums text-slate-400">
                 P(generated) {(finding.provenance.pGenerated * 100).toFixed(0)}% · slope{' '}
-                {fmt(finding.provenance.detail?.floorSlopeAll ?? null, 2)} · flux{' '}
-                {fmt(finding.provenance.detail?.specFluxSd ?? null, 3)}
+                flux {fmt(finding.provenance.detail?.specFluxSd ?? null, 3)} · coh{' '}
+                {fmt(finding.provenance.detail?.stereoCohHi ?? null, 2)}
               </span>
             </div>
             <p className="mt-2 text-[12px] font-bold leading-relaxed text-slate-200">
@@ -309,11 +309,10 @@ export function ExaminerModule() {
               </p>
             ) : null}
             <p className="mt-2 text-[10px] leading-relaxed text-amber-300/90">
-              Three measurements combined — noise-floor colour, its slope in the top octaves,
-              and how much the frame-to-frame spectral change varies. Fitted to 8 tracks of
-              known provenance and validated by holding each track out in turn: 89.6% of
-              excerpts correct, all 8 tracks on the correct side. Eight tracks is a small
-              sample; more material of known origin is what would harden it.
+              A screening signal, ~77% accurate held out over 29 tracks of known provenance —
+              real information, but far from proof, and it abstains whenever a track is not
+              clearly one or the other. It should never be the basis of a filing; the
+              authorship record below is what carries that weight.
             </p>
           </div>
 

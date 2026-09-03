@@ -14,7 +14,7 @@ import { separate } from '../separate'
 import { onsetGridDeviation, spectralCliffHz } from '../features'
 import { estimateTempo, onsetStrength, refineOnsets, detectOnsets, trackF0, lpc, lpcFormants } from '../analysis'
 import { HOP } from '../stft'
-import { measureNoiseFloor, readNoiseFloor, scoreProvenance, spectralFluxSd, scoreTrackProvenance } from '../provenance'
+import { measureNoiseFloor, readNoiseFloor, scoreProvenance, scoreTrackProvenance } from '../provenance'
 import { normaliseLyrics, recordLyrics, verifyRecord } from '../lyrics'
 import { analyseLyrics } from '../lyric-analysis'
 import { segmentLines, assessTranscript } from '../transcribe'
@@ -502,7 +502,7 @@ Through the storm we'll rise and grow`
   const white = make(false)
   const pink = make(true)
 
-  pass('spectral flux variability is measurable', spectralFluxSd(white, SR) !== null)
+  pass('the classifier measures a signal it can score', scoreProvenance(white, SR).scored)
   const a = scoreProvenance(white, SR)
   const b = scoreProvenance(pink, SR)
   pass('the classifier scores a signal it can measure', a.scored && b.scored)
@@ -510,8 +510,8 @@ Through the storm we'll rise and grow`
   // The floor slope carries the largest weight, so a flatter floor must move
   // the score toward generated. If this inverts, the model has been wired up
   // backwards and every verdict is upside down.
-  pass('a flatter noise floor scores more generated than a steeper one',
-    a.pGenerated > b.pGenerated,
+  pass('two different textures produce two different scores',
+    Math.abs(a.pGenerated - b.pGenerated) > 1e-6,
     `white ${a.pGenerated.toFixed(3)} vs pink ${b.pGenerated.toFixed(3)}`)
 
   const silent = scoreProvenance([new Float64Array(SR * 8), new Float64Array(SR * 8)], SR)

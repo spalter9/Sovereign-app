@@ -14,10 +14,14 @@ import type { LyricAnalysis } from './lyric-analysis'
  * provenance, not one of their features separated generated from recorded
  * audio, and a verdict built on them would be confident noise.
  *
- * The recording side uses the three-measurement provenance classifier, which
- * was validated by holding each of those eight tracks out in turn — 89.6% per
- * excerpt, and all eight tracks on the correct side when held out. The lyric
- * side is stylometry, reported as a leaning and never as proof.
+ * The recording side uses the three-measurement provenance classifier. On 29
+ * tracks of known provenance, validated by holding each track out, it reaches
+ * 77% balanced accuracy — real signal, but nowhere near proof, and it fell as
+ * the sample grew, so it is treated as a weak screening lean that abstains
+ * whenever it is unsure and never drives the finding. The lyric side is
+ * stylometry, also a leaning and never proof. What a filing actually rests on
+ * is the authorship record: the applicant's own attestation, hashed and bound
+ * to the recording.
  */
 
 export type SideReading = {
@@ -70,9 +74,9 @@ export function combineVerdict(
     }
   }
   caveats.push(
-    `The recording reading combines three measurements, fitted to 8 tracks of known provenance and validated by holding each one out: 89.6% of excerpts correct, and all 8 tracks on the correct side. Eight tracks is still a small sample${
-      provenance.excerpts.length > 1 ? `; this reading averages ${provenance.excerpts.length} passages` : ''
-    }.`,
+    `The recording reading is a screening signal, not proof: three measurements combined, ~77% accurate held out over 29 tracks of known provenance, and weaker on unfamiliar material. It abstains when unsure${
+      provenance.excerpts.length > 1 ? ` and averages ${provenance.excerpts.length} passages` : ''
+    }. A filing should rest on the authorship record below, not on this.`,
   )
 
   // ── the lyrics ─────────────────────────────────────────────────────────
