@@ -14,6 +14,8 @@ import { separate } from '../separate'
 import { onsetGridDeviation, spectralCliffHz } from '../features'
 import { estimateTempo, onsetStrength, refineOnsets, detectOnsets, trackF0, lpc, lpcFormants } from '../analysis'
 import { HOP } from '../stft'
+import { measureNoiseFloor, readNoiseFloor } from '../provenance'
+import { normaliseLyrics, recordLyrics, verifyRecord } from '../lyrics'
 
 const SR = 44100
 let failures = 0
@@ -215,6 +217,74 @@ function rms(x: Float64Array) {
     cliff !== null && cliff > 4000 && cliff < 9000,
     `${cliff?.toFixed(0)} Hz (true 6000)`,
   )
+}
+
+// ── noise-floor provenance ───────────────────────────────────────────────
+// The one signal that separated real material. Synthesised noise of known
+// colour stands in for the two populations: pink for a physical capture,
+// white for synthesis residual.
+{
+  const n = SR * 12
+  const white: Float64Array[] = [new Float64Array(n), new Float64Array(n)]
+  const pink: Float64Array[] = [new Float64Array(n), new Float64Array(n)]
+  // Voss-McCartney-ish pink by summing octave-spaced smoothed noise.
+  const states = new Float64Array(12)
+  for (let c = 0; c < 2; c += 1) {
+    states.fill(0)
+    for (let i = 0; i < n; i += 1) {
+      const w = Math.random() * 2 - 1
+      white[c]![i] = w * 0.02
+      let sum = 0
+      for (let k = 0; k < 12; k += 1) {
+        if (i % (1 << k) === 0) states[k] = Math.random() * 2 - 1
+        sum += states[k]!
+      }
+      pink[c]![i] = (sum / 12) * 0.02
+    }
+  }
+  const whiteRead = readNoiseFloor(measureNoiseFloor(white, SR))
+  const pinkRead = readNoiseFloor(measureNoiseFloor(pink, SR))
+  // Pink is -0.5 on an amplitude spectrum, which is the *generated* side of
+  // the observed boundary — recorded floors measured steeper than pink, not
+  // shallower. These assert the ordering and the direction, not a colour.
+  pass('a flat floor does not read as a physical capture', whiteRead.resembles !== 'recorded',
+    `${whiteRead.resembles} at slope ${whiteRead.reading.slope?.toFixed(2)}`)
+  pass('pink measures steeper than white', (pinkRead.reading.slope ?? 0) < (whiteRead.reading.slope ?? 0),
+    `${pinkRead.reading.slope?.toFixed(2)} vs ${whiteRead.reading.slope?.toFixed(2)}`)
+  pass('pink alone is not steep enough to read as recorded', pinkRead.resembles !== 'recorded',
+    `${pinkRead.resembles} at slope ${pinkRead.reading.slope?.toFixed(2)}`)
+  pass('silence yields no floor reading', readNoiseFloor(
+    measureNoiseFloor([new Float64Array(SR * 8), new Float64Array(SR * 8)], SR)).resembles === 'inconclusive')
+}
+
+// ── lyric authorship record ──────────────────────────────────────────────
+{
+  const raw = '  I kept the receipts\r\n\n\n\n  of everything you said  \n'
+  pass('normalisation is stable across re-typing',
+    normaliseLyrics(raw) === normaliseLyrics('I kept the receipts\n\nof everything you said'))
+
+  const audioHash = 'a'.repeat(64)
+  const fixedAt = '2026-01-01T00:00:00.000Z'
+  const record = await recordLyrics({
+    raw,
+    audioHash,
+    fixedAt,
+    posture: { lyricsAuthored: true, recordingGenerated: true, musicAuthored: false },
+  })
+  pass('a record verifies against itself', await verifyRecord(record))
+  pass('the record claims the lyrics', /claims the lyrics/.test(record.eCoText))
+  pass('the record disclaims the recording', /disclaims copyright in the sound recording/.test(record.eCoText))
+  // The drafted sentence must read as English: an earlier version emitted a
+  // doubled relative clause here.
+  pass('the drafted sentence has no doubled clause', !/which is machine-generated, which/.test(record.eCoText))
+
+  // Swapping either side must break the binding, or the record proves nothing.
+  pass('altered lyrics break the record', !(await verifyRecord({ ...record, text: record.text + ' extra' })))
+  pass('a swapped recording breaks the binding',
+    !(await verifyRecord({ ...record, audioHash: 'b'.repeat(64) })))
+
+  const same = await recordLyrics({ raw, audioHash, fixedAt, posture: record.posture })
+  pass('the same inputs produce the same record', same.crossHash === record.crossHash)
 }
 
 console.log(

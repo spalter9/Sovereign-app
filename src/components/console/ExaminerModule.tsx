@@ -9,6 +9,12 @@ import {
   Upload,
 } from 'lucide-react'
 import { examineFile, type ExaminerFinding } from '../../lib/examiner/client'
+import {
+  recordLyrics,
+  toDeclarationJson,
+  type LyricRecord,
+  type RightsPosture,
+} from '../../lib/examiner/lyrics'
 
 /**
  * The Authorship Examiner, as its own console module.
@@ -340,6 +346,40 @@ export function ExaminerModule() {
             </div>
           </div>
 
+          {/* The one signal that separated real material. Shown on its own,
+              because averaging it into features that did not would hide
+              both results. */}
+          <div
+            className={`rounded-xl border p-4 ${
+              finding.floor.resembles === 'generated'
+                ? 'border-rose-700/60 bg-rose-950/20'
+                : finding.floor.resembles === 'recorded'
+                  ? 'border-emerald-700/60 bg-emerald-950/20'
+                  : 'border-slate-700 bg-slate-900'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
+                Noise-floor provenance
+              </p>
+              <span className="font-mono text-[10px] tabular-nums text-slate-400">
+                slope {fmt(finding.floor.reading.slope, 2)} · flatness{' '}
+                {fmt(finding.floor.reading.flatness, 3)}
+              </span>
+            </div>
+            <p className="mt-2 text-[12px] font-bold leading-relaxed text-slate-200">
+              Floor resembles {finding.floor.resembles} audio.
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{finding.floor.note}</p>
+            <p className="mt-2 text-[10px] leading-relaxed text-amber-300/90">
+              Provisional. Fitted to 32 excerpts from 8 tracks of known provenance, where a
+              single threshold classified 90.6% correctly — a lead, not a proven detector.
+              The performance measurements above separated nothing on that same material.
+            </p>
+          </div>
+
+          <LyricRecordPanel audioHash={finding.sha256} fileName={finding.fileName} />
+
           <p className="flex items-start gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-[11px] leading-relaxed text-slate-400">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-500" aria-hidden />
             Sources are estimated by harmonic-percussive separation and centre extraction in this
@@ -359,6 +399,110 @@ export function ExaminerModule() {
           </div>
         )
       )}
+    </div>
+  )
+}
+
+
+/**
+ * Lyric authorship record.
+ *
+ * Not a detector — see lyrics.ts. This fixes what the applicant claims, when,
+ * and against which recording, which is the evidence that actually supports a
+ * claim to the words when the recording itself is machine-generated.
+ */
+function LyricRecordPanel({ audioHash, fileName }: { audioHash: string; fileName: string }) {
+  const [raw, setRaw] = useState('')
+  const [posture, setPosture] = useState<RightsPosture>({
+    lyricsAuthored: true,
+    recordingGenerated: true,
+    musicAuthored: false,
+  })
+  const [record, setRecord] = useState<LyricRecord | null>(null)
+
+  const toggle = (key: keyof RightsPosture) =>
+    setPosture((p) => ({ ...p, [key]: !p[key] }))
+
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <p className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
+        Lyric authorship record
+      </p>
+      <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+        Fixes your words against this recording's hash and drafts the claim. It records what you
+        assert; it does not try to detect who wrote the text, because no reliable method for
+        that exists.
+      </p>
+
+      <textarea
+        value={raw}
+        onChange={(e) => {
+          setRaw(e.target.value)
+          setRecord(null)
+        }}
+        rows={6}
+        placeholder="Paste your lyrics as written…"
+        aria-label="Lyrics as written"
+        className="mt-3 w-full rounded-lg border border-slate-700 bg-[#050a15] px-3 py-2 font-mono text-[11px] text-slate-200 outline-none focus:border-cyan-500/60"
+      />
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {(
+          [
+            ['lyricsAuthored', 'I wrote the lyrics'],
+            ['musicAuthored', 'I composed the music'],
+            ['recordingGenerated', 'The recording is AI-generated'],
+          ] as [keyof RightsPosture, string][]
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => {
+              toggle(key)
+              setRecord(null)
+            }}
+            className={`rounded-lg border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
+              posture[key]
+                ? 'border-cyan-500/60 bg-cyan-950/50 text-cyan-300'
+                : 'border-slate-700 bg-slate-900 text-slate-500'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        disabled={!raw.trim()}
+        onClick={() => {
+          void recordLyrics({ raw, audioHash, posture }).then(setRecord)
+        }}
+        className="mt-3 w-full rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-40"
+      >
+        Fix this record
+      </button>
+
+      {record ? (
+        <div className="mt-3 space-y-2 rounded-lg border border-slate-700 bg-[#050a15] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-mono text-[10px] text-slate-500">
+              {record.lineCount} lines · {record.wordCount} words · fixed{' '}
+              {new Date(record.fixedAt).toLocaleString()}
+            </span>
+            <CopyButton text={toDeclarationJson(record, fileName)} />
+          </div>
+          <p className="break-all font-mono text-[10px] text-slate-500">
+            lyrics sha256 {record.textHash}
+          </p>
+          <p className="break-all font-mono text-[10px] text-slate-500">
+            cross-hash {record.crossHash}
+          </p>
+          <p className="border-t border-slate-800 pt-2 font-mono text-[11px] leading-relaxed text-slate-200">
+            {record.eCoText}
+          </p>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { analyseContainer } from './container'
 import { clearsAllPlatforms, evaluateDelivery, type DeliveryVerdict } from './delivery-targets'
 import { FEATURE_EXTRACTORS } from './features'
 import { separate, type SourceName } from './separate'
+import { measureNoiseFloor, readNoiseFloor, type FloorVerdict } from './provenance'
 import {
   authorshipIndex,
   claimEligibility,
@@ -47,6 +48,15 @@ export type ExaminerFinding = {
   dossier: UscoFilingDossier
   /** Share of total feature weight actually measured, per group. */
   evidence: Record<string, number>
+  /**
+   * Noise-floor provenance, reported on its own.
+   *
+   * Deliberately not folded into the authorship index: the performance
+   * features that index is built from were tested against tracks of known
+   * provenance and separated nothing, while this one did. Averaging a signal
+   * that works into several that do not would hide both facts.
+   */
+  floor: FloorVerdict
   separation: 'browser_hpss'
 }
 
@@ -177,8 +187,12 @@ export function examine(
 
   const index = authorshipIndex(stems)
 
+  onProgress?.('Reading the noise floor', 0.95)
+  const floor = readNoiseFloor(measureNoiseFloor(planar, audio.sampleRate))
+
   onProgress?.('Drafting the limitation of claim', 0.97)
   return {
+    floor,
     fileName: meta.fileName,
     sha256: meta.sha256,
     durationSec: audio.length / audio.sampleRate,
