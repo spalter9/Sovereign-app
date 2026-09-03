@@ -57,6 +57,11 @@ export type ExaminerFinding = {
    * that works into several that do not would hide both facts.
    */
   floor: FloorVerdict
+  /**
+   * The separated vocal, kept so lyrics can be transcribed without paying for
+   * separation twice. Dropped before the finding crosses back to the page.
+   */
+  vocalChannels?: Float64Array[]
   separation: 'browser_hpss'
 }
 
@@ -193,6 +198,7 @@ export function examine(
   onProgress?.('Drafting the limitation of claim', 0.97)
   return {
     floor,
+    vocalChannels: separation.vocals.channels,
     fileName: meta.fileName,
     sha256: meta.sha256,
     durationSec: audio.length / audio.sampleRate,

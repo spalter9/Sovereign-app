@@ -9,6 +9,12 @@ export default defineConfig(({ mode }) => {
   return {
     base: env.VITE_BASE || '/',
     plugins: [react(), tailwindcss()],
+    // The examiner worker lazily imports the speech-recognition runtime, which
+    // makes it a code-splitting build. Vite's default worker format (iife)
+    // cannot emit those, so the worker is built as an ES module.
+    worker: {
+      format: 'es' as const,
+    },
     server: {
       host: true,
       port: 5173,

@@ -16,6 +16,8 @@ import { estimateTempo, onsetStrength, refineOnsets, detectOnsets, trackF0, lpc,
 import { HOP } from '../stft'
 import { measureNoiseFloor, readNoiseFloor } from '../provenance'
 import { normaliseLyrics, recordLyrics, verifyRecord } from '../lyrics'
+import { analyseLyrics } from '../lyric-analysis'
+import { segmentLines } from '../transcribe'
 
 const SR = 44100
 let failures = 0
@@ -285,6 +287,86 @@ function rms(x: Float64Array) {
 
   const same = await recordLyrics({ raw, audioHash, fixedAt, posture: record.posture })
   pass('the same inputs produce the same record', same.crossHash === record.crossHash)
+}
+
+// ── lyric stylometry ─────────────────────────────────────────────────────
+{
+  const generated = `I'm walking through the endless night
+Chasing dreams that burn so bright
+Every shadow falls behind
+Leaving all my fears confined
+
+Hold me close and never let go
+Through the storm we'll rise and grow
+Shattered dreams will fade away
+In your arms I'll always stay
+
+City lights are burning bright
+Guiding me toward the light
+Piece by piece I'm falling apart
+But you're the healer of my heart`
+
+  const human = `She kept the Metro card from 2011
+in the drawer with the batteries that don't work
+I said that's junk, she said it's Tuesday
+and I didn't have an answer for that
+
+We ate at the Wan Fu on Sherman
+because the good place was closed on Mondays
+and she ordered for both of us like always
+and I let her, because she's usually right
+
+Now the drawer's mine and the card's still in it
+and the batteries still don't work
+and I keep meaning to throw all of it out
+and I keep not doing it`
+
+  const g = analyseLyrics(generated)
+  const h = analyseLyrics(human)
+  pass('generated-style lyrics read as generated', g.leaning === 'reads_generated',
+    `index ${(g.index*100).toFixed(1)}`)
+  pass('written lyrics read as written', h.leaning === 'reads_human_written',
+    `index ${(h.index*100).toFixed(1)}`)
+  pass('the two are well separated', h.index - g.index > 0.3,
+    `${(g.index*100).toFixed(1)} vs ${(h.index*100).toFixed(1)}`)
+
+  // A rhyme detector that only handles single-vowel words silently scores a
+  // tightly-rhymed lyric as loose, which pushes generated text toward human.
+  const rhyme = g.features.find((f) => f.id === 'rhyme')!
+  pass('a rhyming lyric is detected as rhyming', rhyme.value >= 0.4,
+    `${(rhyme.value*100).toFixed(0)}% of pairs`)
+  const freeVerse = h.features.find((f) => f.id === 'rhyme')!
+  pass('free verse is not scored as rhyming', freeVerse.value <= 0.2,
+    `${(freeVerse.value*100).toFixed(0)}% of pairs`)
+
+  pass('specificity notices names and numbers',
+    (g.features.find((f) => f.id === 'specificity')!.value) <
+    (h.features.find((f) => f.id === 'specificity')!.value))
+  pass('stock phrasing is counted where it occurs',
+    (g.features.find((f) => f.id === 'collocation')!.value) >
+    (h.features.find((f) => f.id === 'collocation')!.value))
+
+  // Refusing to judge too little text matters more than judging it: a
+  // four-word transcript would otherwise get a confident verdict.
+  const short = analyseLyrics('Hold me close\nnever let go')
+  pass('too little text is refused rather than judged',
+    short.tooShort && short.leaning === 'inconclusive')
+
+  // Section markers are structure, not writing.
+  const marked = analyseLyrics(`[Verse 1]\n${human}\n[Chorus]\n${human}`)
+  pass('section markers do not count as lines', marked.leaning === 'reads_human_written')
+}
+
+// ── transcript segmentation ──────────────────────────────────────────────
+{
+  // Whisper returns running prose; the stylometry reads line length and rhyme
+  // position, so it has to be broken somewhere sensible.
+  const seg = segmentLines('I kept the receipts. She said it was Tuesday, and I had no answer.')
+  pass('a transcript is segmented into lines', seg.length >= 2, `${seg.length} lines`)
+  pass('segmentation drops trailing punctuation', seg.every((l) => !/[,;]$/.test(l)))
+  const long = segmentLines(Array.from({ length: 40 }, () => 'word').join(' '))
+  pass('an unpunctuated stretch still yields lines', long.length >= 3, `${long.length} lines`)
+  pass('empty input yields no lines', segmentLines('   ').length === 0)
 }
 
 console.log(

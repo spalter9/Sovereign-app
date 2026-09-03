@@ -1,5 +1,7 @@
-import type { ExamineRequest, ExamineResponse } from './worker'
+import type { ExamineRequest, ExamineResponse, LyricRequest } from './worker'
 import type { ExaminerFinding } from './examine'
+import type { Transcript } from './transcribe'
+import type { LyricAnalysis } from './lyric-analysis'
 
 /**
  * Decode a file locally and run the examiner in a worker.
@@ -46,6 +48,8 @@ export async function examineFile(
     for (let i = 0; i < length; i += 1) samples[i * channels + ch] = data[i]!
   }
 
+  // The worker is kept alive after the examination so the lyric step can use
+  // the vocal it already separated instead of doing the work twice.
   const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })
 
   return new Promise<ExaminerFinding>((resolve, reject) => {
@@ -54,9 +58,10 @@ export async function examineFile(
       if (message.type === 'progress') {
         onProgress?.(message.stage, message.fraction)
       } else if (message.type === 'done') {
-        worker.terminate()
+        liveWorker?.terminate()
+        liveWorker = worker
         resolve(message.finding)
-      } else {
+      } else if (message.type === 'error') {
         worker.terminate()
         reject(new Error(message.message))
       }
@@ -76,5 +81,44 @@ export async function examineFile(
       samples,
     }
     worker.postMessage(request, [samples.buffer])
+  })
+}
+
+
+/** The worker from the most recent examination, holding its separated vocal. */
+let liveWorker: Worker | null = null
+
+export type LyricReading = { transcript: Transcript; analysis: LyricAnalysis }
+
+/**
+ * Transcribe the examined track's vocal and read the writing.
+ *
+ * Separate from `examineFile` because it downloads a recognition model on
+ * first use, which is a cost the user should choose to pay rather than have
+ * imposed on every audit.
+ */
+export function readLyricsFromAudio(
+  onProgress?: (stage: string, fraction: number) => void,
+): Promise<LyricReading> {
+  const worker = liveWorker
+  if (!worker) {
+    return Promise.reject(new Error('Examine a container first — the vocal comes from that pass.'))
+  }
+  return new Promise<LyricReading>((resolve, reject) => {
+    const handle = (event: MessageEvent<ExamineResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') {
+        onProgress?.(message.stage, message.fraction)
+      } else if (message.type === 'lyrics') {
+        worker.removeEventListener('message', handle)
+        resolve({ transcript: message.transcript, analysis: message.analysis })
+      } else if (message.type === 'error') {
+        worker.removeEventListener('message', handle)
+        reject(new Error(message.message))
+      }
+    }
+    worker.addEventListener('message', handle)
+    const request: LyricRequest = { type: 'lyrics' }
+    worker.postMessage(request)
   })
 }
