@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { AudioTransport } from './AudioTransport'
-import { AuthorshipExaminer } from './AuthorshipExaminer'
+import { ExaminerModule } from './ExaminerModule'
 
 interface SspEngineConsoleProps {
   onLock: () => void
@@ -19,6 +19,7 @@ const TABS = [
   'Spalty AI',
   'Markets & Media',
   'Diagnostics',
+  'Examiner',
 ] as const
 
 export function SspEngineConsole({
@@ -191,26 +192,18 @@ export function SspEngineConsole({
         )}
 
         {activeTab === 6 && (
-          <div className="space-y-6">
-            <Panel title="AI Crawler Defense & Perimeter Toll Gate">
-              <p className="text-xs font-bold text-slate-300">
-                Active threat detection intercepting unauthorized AI training scrapers with smart
-                contract tolls.
-              </p>
-              <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <div className="flex justify-between text-xs font-black">
-                  <span className="text-slate-400">SHIELD STATUS:</span>
-                  <span className="text-cyan-400">ARMED &amp; MONITORING</span>
-                </div>
+          <Panel title="AI Crawler Defense & Perimeter Toll Gate">
+            <p className="text-xs font-bold text-slate-300">
+              Active threat detection intercepting unauthorized AI training scrapers with smart
+              contract tolls.
+            </p>
+            <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div className="flex justify-between text-xs font-black">
+                <span className="text-slate-400">SHIELD STATUS:</span>
+                <span className="text-cyan-400">ARMED &amp; MONITORING</span>
               </div>
-            </Panel>
-
-            {/* The inward-facing half: the toll gate keeps other people's models
-                out, the examiner measures how much of a machine is already in. */}
-            <Panel title="Authorship Examiner — Sovereign Audio Protocol" badge="Local only">
-              <AuthorshipExaminer />
-            </Panel>
-          </div>
+            </div>
+          </Panel>
         )}
 
         {activeTab === 7 && (
@@ -270,6 +263,15 @@ export function SspEngineConsole({
             <Action onClick={() => setStatus('EXPORT // 32-BIT MASTER QUEUED')}>
               Export 32-Bit Master WAV // FLAC // Stems
             </Action>
+          </Panel>
+        )}
+
+        {activeTab === 10 && (
+          <Panel
+            title="Authorship Examiner — Sovereign Audio Protocol"
+            badge="Runs in this browser"
+          >
+            <ExaminerModule />
           </Panel>
         )}
 
