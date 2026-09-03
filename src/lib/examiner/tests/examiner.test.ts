@@ -540,8 +540,8 @@ Through the storm we'll rise and grow`
     const frame = [0xff, 0xe0 | (version<<3) | 0x02, (0x9<<4) | (rateIndex<<2), 0]
     return new Uint8Array([...id3, ...frame, ...new Array(2048).fill(0)])
   }
-  const at48 = analyseFile(mp3(1).buffer, 'x.mp3')  // index 1 = 48000 for MPEG-1
-  const at44 = analyseFile(mp3(0).buffer, 'y.mp3')  // index 0 = 44100
+  const at48 = analyseFile(mp3(1).buffer as ArrayBuffer, 'x.mp3')  // index 1 = 48000 for MPEG-1
+  const at44 = analyseFile(mp3(0).buffer as ArrayBuffer, 'y.mp3')  // index 0 = 44100
   pass('mp3 sample rate is read from the frame header', at48.sampleRate === 48000 && at44.sampleRate === 44100,
     `${at48.sampleRate} / ${at44.sampleRate}`)
   pass('a 48 kHz mp3 reads as a generated pipeline', at48.leaning === 'generated_pipeline')
@@ -555,10 +555,10 @@ Through the storm we'll rise and grow`
     b[24]=rate&0xff; b[25]=(rate>>8)&0xff; b[26]=(rate>>16)&0xff; b[27]=(rate>>24)&0xff
     return b
   }
-  const w = analyseFile(wav(44100).buffer, 'z.wav')
+  const w = analyseFile(wav(44100).buffer as ArrayBuffer, 'z.wav')
   pass('wav sample rate is parsed', w.sampleRate === 44100, `${w.sampleRate}`)
   pass('an unknown/headerless blob does not false-accuse',
-    analyseFile(new Uint8Array(32).buffer, 'q.bin').leaning === 'inconclusive')
+    analyseFile(new Uint8Array(32).buffer as ArrayBuffer, 'q.bin').leaning === 'inconclusive')
 }
 
 console.log(
