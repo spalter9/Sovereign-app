@@ -198,7 +198,7 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
 /* ── the classifier ──────────────────────────────────────────────────────
  *
  * Three measurements, combined by a class-weighted logistic model fitted on
- * 46 tracks of known provenance (25 generated, 21 recorded) and validated
+ * 49 tracks of known provenance (25 generated, 24 recorded) and validated
  * by holding each track out in turn.
  *
  * The twenty-track fit exists because the eight-track one failed. Run blind on
@@ -207,8 +207,8 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
  * human set to sixteen tracks spanning decades, studios and genres (a 1950s
  * Elvis master and a modern bedroom mix both now read as recorded) is what
  * fixed it: held out over 46 tracks — holding out whole song-groups so variants of one
- * song cannot leak between train and test — the model reaches 77% balanced
- * accuracy (88% of generated tracks caught, 67% of recorded ones cleared).
+ * song cannot leak between train and test — the model reaches 79% balanced
+ * accuracy (88% of generated tracks caught, 71% of recorded ones cleared).
  * That is DOWN from a 83% figure measured on a narrower human set: adding
  * diverse human material (a New Jack Swing remix, other genres) revealed that
  * true specificity on recorded audio is lower than a narrow set suggested.
@@ -231,10 +231,10 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
 
 const MODEL = {
   features: ['specFluxSd', 'stereoCohHi', 'specFluxKurt'] as const,
-  mean: [0.964358, 0.789576, 6.558244],
-  sd: [0.090212, 0.196784, 1.132335],
-  weights: [-0.700915, 0.896256, 0.917743],
-  bias: 0.11569,
+  mean: [0.969449, 0.783946, 6.551588],
+  sd: [0.102387, 0.197428, 1.137533],
+  weights: [-0.729786, 0.923796, 0.93267],
+  bias: 0.021817,
 } as const
 
 export type ProvenanceScore = {
