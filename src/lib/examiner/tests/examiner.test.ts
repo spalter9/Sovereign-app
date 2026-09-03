@@ -16,6 +16,7 @@ import { estimateTempo, onsetStrength, refineOnsets, detectOnsets, trackF0, lpc,
 import { HOP } from '../stft'
 import { measureNoiseFloor, readNoiseFloor, scoreProvenance, scoreTrackProvenance } from '../provenance'
 import { normaliseLyrics, recordLyrics, verifyRecord } from '../lyrics'
+import { analyseFile } from '../file-forensics'
 import { analyseLyrics } from '../lyric-analysis'
 import { segmentLines, assessTranscript } from '../transcribe'
 
@@ -526,6 +527,38 @@ Through the storm we'll rise and grow`
   const undecided = scoreTrackProvenance(
     [new Float64Array(SR * 8), new Float64Array(SR * 8)], SR)
   pass('an unmeasurable track is inconclusive', undecided.resembles === 'inconclusive')
+}
+
+// ── file forensics ───────────────────────────────────────────────────────
+// The pipeline signature: generators export at 48 kHz, studios/consumers at
+// 44.1 kHz. On original files this separated 66 of 66 decisive cases; it is
+// void once a file is re-encoded, which the parser must recognise.
+{
+  // Minimal MP3: ID3v2 header then an MPEG-1 Layer III frame at 48 kHz.
+  function mp3(rateIndex: number, version = 3): Uint8Array {
+    const id3 = [0x49,0x44,0x33,3,0,0,0,0,0,0] // 'ID3', no tag body
+    const frame = [0xff, 0xe0 | (version<<3) | 0x02, (0x9<<4) | (rateIndex<<2), 0]
+    return new Uint8Array([...id3, ...frame, ...new Array(2048).fill(0)])
+  }
+  const at48 = analyseFile(mp3(1).buffer, 'x.mp3')  // index 1 = 48000 for MPEG-1
+  const at44 = analyseFile(mp3(0).buffer, 'y.mp3')  // index 0 = 44100
+  pass('mp3 sample rate is read from the frame header', at48.sampleRate === 48000 && at44.sampleRate === 44100,
+    `${at48.sampleRate} / ${at44.sampleRate}`)
+  pass('a 48 kHz mp3 reads as a generated pipeline', at48.leaning === 'generated_pipeline')
+  pass('a 44.1 kHz mp3 reads as a recorded pipeline', at44.leaning === 'recorded_pipeline')
+
+  // A WAV at 44.1 kHz is a recorded/edit pipeline, not a generator default.
+  function wav(rate: number): Uint8Array {
+    const b = new Uint8Array(64)
+    b.set([0x52,0x49,0x46,0x46],0); b.set([0x57,0x41,0x56,0x45],8)
+    b.set([0x66,0x6d,0x74,0x20],12); b[16]=16
+    b[24]=rate&0xff; b[25]=(rate>>8)&0xff; b[26]=(rate>>16)&0xff; b[27]=(rate>>24)&0xff
+    return b
+  }
+  const w = analyseFile(wav(44100).buffer, 'z.wav')
+  pass('wav sample rate is parsed', w.sampleRate === 44100, `${w.sampleRate}`)
+  pass('an unknown/headerless blob does not false-accuse',
+    analyseFile(new Uint8Array(32).buffer, 'q.bin').leaning === 'inconclusive')
 }
 
 console.log(

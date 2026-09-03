@@ -2,6 +2,7 @@ import type { ExamineRequest, ExamineResponse, LyricRequest } from './worker'
 import type { ExaminerFinding } from './examine'
 import type { Transcript } from './transcribe'
 import type { LyricAnalysis } from './lyric-analysis'
+import { analyseFile } from './file-forensics'
 
 /**
  * Decode a file locally and run the examiner in a worker.
@@ -27,6 +28,9 @@ export async function examineFile(
   const bytes = await file.arrayBuffer()
   // Hash the bytes exactly as they arrived, before decoding changes anything.
   const sha256 = await sha256Hex(bytes.slice(0))
+  // File forensics needs the original container, which decoding discards, so
+  // it is read here from the raw bytes rather than in the worker.
+  const fileForensics = analyseFile(bytes, file.name)
 
   onProgress?.('Decoding', 0.01)
   const Ctx =
@@ -60,7 +64,7 @@ export async function examineFile(
       } else if (message.type === 'done') {
         liveWorker?.terminate()
         liveWorker = worker
-        resolve(message.finding)
+        resolve({ ...message.finding, fileForensics })
       } else if (message.type === 'error') {
         worker.terminate()
         reject(new Error(message.message))

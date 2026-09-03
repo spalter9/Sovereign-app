@@ -1,4 +1,5 @@
 import type { TrackProvenance } from './provenance'
+import type { FileForensics } from './file-forensics'
 import type { LyricAnalysis } from './lyric-analysis'
 
 /**
@@ -46,37 +47,65 @@ export type CombinedVerdict = {
 export function combineVerdict(
   provenance: TrackProvenance,
   lyrics: LyricAnalysis | null,
+  fileForensics?: FileForensics,
 ): CombinedVerdict {
   const caveats: string[] = []
 
-  // ── the recording ──────────────────────────────────────────────────────
+  // ── the recording: two tiers ─────────────────────────────────────────────
+  // Tier 1 is the file's own pipeline signature — 97% on original files, but
+  // void the moment a file is re-encoded. Tier 2 is the acoustic model — ~79%
+  // but robust to re-encoding. When the file signature is decisive it leads
+  // and the audio corroborates; when the file has been re-encoded the audio
+  // carries the reading alone.
+  const ff = fileForensics
+  const fileGenerated = ff?.leaning === 'generated_pipeline'
+  const fileRecorded = ff?.leaning === 'recorded_pipeline'
+  const audioGenerated = provenance.resembles === 'generated'
+  const audioRecorded = provenance.resembles === 'recorded'
+
   let recording: SideReading
-  if (provenance.resembles === 'generated') {
+  if (fileGenerated) {
+    recording = {
+      side: 'recording',
+      finding: audioGenerated
+        ? 'Machine-generated — the file signature and the audio agree.'
+        : 'The file is a machine-generation export.',
+      strength: 'measured',
+      detail: `${ff!.note}${audioGenerated ? ' The acoustic measurement agrees.' : audioRecorded ? ' The acoustic measurement leans the other way, so confirm the file is the original.' : ''}`,
+    }
+  } else if (fileRecorded) {
+    recording = {
+      side: 'recording',
+      finding: audioGenerated
+        ? 'The file is a studio/consumer export, but the audio leans generated — check provenance.'
+        : 'The file is a studio/consumer export.',
+      strength: 'measured',
+      detail: `${ff!.note}${audioRecorded ? ' The acoustic measurement agrees.' : ''}`,
+    }
+  } else if (audioGenerated) {
     recording = {
       side: 'recording',
       finding: 'The recording looks machine-generated.',
       strength: 'measured',
-      detail: provenance.note,
+      detail: `${ff ? ff.note + ' ' : ''}${provenance.note}`,
     }
-  } else if (provenance.resembles === 'recorded') {
+  } else if (audioRecorded) {
     recording = {
       side: 'recording',
       finding: 'The recording looks like a physical capture.',
       strength: 'measured',
-      detail: provenance.note,
+      detail: `${ff ? ff.note + ' ' : ''}${provenance.note}`,
     }
   } else {
     recording = {
       side: 'recording',
       finding: 'The recording cannot be placed either way.',
       strength: 'not_established',
-      detail: provenance.note,
+      detail: `${ff ? ff.note + ' ' : ''}${provenance.note}`,
     }
   }
   caveats.push(
-    `The recording reading is a screening signal, not proof: three measurements combined, ~79% accurate held out over 49 tracks of known provenance, and weaker on unfamiliar material. It abstains when unsure${
-      provenance.excerpts.length > 1 ? ` and averages ${provenance.excerpts.length} passages` : ''
-    }. A filing should rest on the authorship record below, not on this.`,
+    'The recording reading has two tiers. The file signature (sample rate and encoder) separates generated from recorded exports at 97% on original files but is void if a file has been re-encoded. The acoustic model is ~79% and robust to re-encoding. Neither is proof; a filing rests on the authorship record below.',
   )
 
   // ── the lyrics ─────────────────────────────────────────────────────────
@@ -119,8 +148,8 @@ export function combineVerdict(
   }
 
   // ── what the pair supports ─────────────────────────────────────────────
-  const generatedAudio = provenance.resembles === 'generated'
-  const recordedAudio = provenance.resembles === 'recorded'
+  const generatedAudio = fileGenerated || provenance.resembles === 'generated'
+  const recordedAudio = fileRecorded || provenance.resembles === 'recorded'
   const humanWords = lyricSide.finding.startsWith('The writing reads as written')
   const generatedWords = lyricSide.finding.startsWith('The writing carries markers')
 

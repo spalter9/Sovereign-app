@@ -17,6 +17,7 @@ import {
   STEM_GROUP,
 } from './scoring'
 import type { AudioBuffer32 } from './audio-types'
+import type { FileForensics } from './file-forensics'
 import type {
   ClaimEligibility,
   ContainerReport,
@@ -68,6 +69,8 @@ export type ExaminerFinding = {
    * across several passages of the track. This is what the verdict uses.
    */
   provenance: TrackProvenance
+  /** File-level forensics, computed from the original bytes on the main thread. */
+  fileForensics?: FileForensics
   /**
    * The separated vocal, kept so lyrics can be transcribed without paying for
    * separation twice. Dropped before the finding crosses back to the page.
