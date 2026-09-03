@@ -657,7 +657,7 @@ function CombinedVerdictPanel({
   finding: ExaminerFinding
   lyrics: LyricAnalysis | null
 }) {
-  const verdict = combineVerdict(finding.provenance, lyrics, finding.fileForensics)
+  const verdict = combineVerdict(finding.provenance, lyrics, finding.fileForensics, finding.watermarks)
   const sides = [verdict.recording, verdict.lyrics]
 
   return (

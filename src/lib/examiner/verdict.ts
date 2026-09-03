@@ -1,5 +1,6 @@
 import type { TrackProvenance } from './provenance'
 import type { FileForensics } from './file-forensics'
+import type { WatermarkReport } from './watermark'
 import type { LyricAnalysis } from './lyric-analysis'
 
 /**
@@ -48,10 +49,17 @@ export function combineVerdict(
   provenance: TrackProvenance,
   lyrics: LyricAnalysis | null,
   fileForensics?: FileForensics,
+  watermarks?: WatermarkReport,
 ): CombinedVerdict {
   const caveats: string[] = []
 
-  // ── the recording: two tiers ─────────────────────────────────────────────
+  // ── tier 0: a detected vendor watermark is the strongest signal ─────────
+  const watermarkHit = watermarks?.anyDetected
+    ? watermarks.results.find((r) => r.status === 'detected') ?? null
+    : null
+  if (watermarks) caveats.push(watermarks.note)
+
+  // ── the recording: file + acoustic tiers (watermark overrides below) ────
   // Tier 1 is the file's own pipeline signature — 97% on original files, but
   // void the moment a file is re-encoded. Tier 2 is the acoustic model — ~79%
   // but robust to re-encoding. When the file signature is decisive it leads
@@ -64,7 +72,14 @@ export function combineVerdict(
   const audioRecorded = provenance.resembles === 'recorded'
 
   let recording: SideReading
-  if (fileGenerated) {
+  if (watermarkHit) {
+    recording = {
+      side: 'recording',
+      finding: 'Machine-generated — a generator watermark was detected.',
+      strength: 'measured',
+      detail: watermarkHit.note,
+    }
+  } else if (fileGenerated) {
     recording = {
       side: 'recording',
       finding: audioGenerated
@@ -148,7 +163,7 @@ export function combineVerdict(
   }
 
   // ── what the pair supports ─────────────────────────────────────────────
-  const generatedAudio = fileGenerated || provenance.resembles === 'generated'
+  const generatedAudio = !!watermarkHit || fileGenerated || provenance.resembles === 'generated'
   const recordedAudio = fileRecorded || provenance.resembles === 'recorded'
   const humanWords = lyricSide.finding.startsWith('The writing reads as written')
   const generatedWords = lyricSide.finding.startsWith('The writing carries markers')

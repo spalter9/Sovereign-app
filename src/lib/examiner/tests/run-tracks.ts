@@ -60,7 +60,7 @@ for (const name of readdirSync(dir).filter((f) => f.endsWith('.wav')).sort()) {
     }
   }
   const t0 = Date.now()
-  const f = examine(clipped, { fileName: name, sha256: 'n/a' })
+  const f = await examine(clipped, { fileName: name, sha256: 'n/a' })
   const secs = (Date.now() - t0) / 1000
   console.log(`\n=== ${name}  (${(clipped.length / clipped.sampleRate).toFixed(0)}s analysed in ${secs.toFixed(1)}s) ===`)
   console.log(`  VERDICT   ${f.verdict}   index ${(f.authorshipIndex * 100).toFixed(1)}   ${f.eligibility}`)

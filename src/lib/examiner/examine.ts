@@ -18,6 +18,7 @@ import {
 } from './scoring'
 import type { AudioBuffer32 } from './audio-types'
 import type { FileForensics } from './file-forensics'
+import { checkWatermarks, type WatermarkReport } from './watermark'
 import type {
   ClaimEligibility,
   ContainerReport,
@@ -71,6 +72,8 @@ export type ExaminerFinding = {
   provenance: TrackProvenance
   /** File-level forensics, computed from the original bytes on the main thread. */
   fileForensics?: FileForensics
+  /** Vendor watermark checks — strongest signal when a detector is licensed. */
+  watermarks?: WatermarkReport
   /**
    * The separated vocal, kept so lyrics can be transcribed without paying for
    * separation twice. Dropped before the finding crosses back to the page.
@@ -155,11 +158,11 @@ function planarOf(audio: AudioBuffer32): Float64Array[] {
   return planar
 }
 
-export function examine(
+export async function examine(
   audio: AudioBuffer32,
   meta: { fileName: string; sha256: string },
   onProgress?: Progress,
-): ExaminerFinding {
+): Promise<ExaminerFinding> {
   onProgress?.('Measuring the container', 0.02)
   const container = analyseContainer(audio)
   const delivery = evaluateDelivery(container.integrated_lufs, container.true_peak_dbtp)
@@ -206,6 +209,9 @@ export function examine(
 
   const index = authorshipIndex(stems)
 
+  onProgress?.('Checking watermarks', 0.93)
+  const watermarks = await checkWatermarks(audio)
+
   onProgress?.('Reading provenance', 0.94)
   const floor = readNoiseFloor(measureNoiseFloor(planar, audio.sampleRate))
   const provenance = scoreTrackProvenance(planar, audio.sampleRate)
@@ -214,6 +220,7 @@ export function examine(
   return {
     floor,
     provenance,
+    watermarks,
     vocalChannels: separation.vocals.channels,
     fileName: meta.fileName,
     sha256: meta.sha256,

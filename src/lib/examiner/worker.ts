@@ -77,7 +77,7 @@ self.onmessage = async (event: MessageEvent<ExamineRequest | LyricRequest>) => {
       bitDepth: 32,
       format: 'float32',
     }
-    const finding = examine(
+    const finding = await examine(
       audio,
       { fileName: request.fileName, sha256: request.sha256 },
       (stage, fraction) => post({ type: 'progress', stage, fraction }),
