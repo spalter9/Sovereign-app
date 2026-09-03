@@ -149,10 +149,31 @@ function ramp(v: number, low: number, high: number): number {
   return clamp01((v - low) / (high - low))
 }
 
+/**
+ * Collapse repeated lines to one occurrence.
+ *
+ * A chorus sung four times is one piece of writing, not four. Left in, the
+ * repeats drive line-length variance and vocabulary reach through the floor
+ * and every refrain-driven song — which is most songs — measures as
+ * machine-regular.
+ */
+function withoutRefrains(ls: string[]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const line of ls) {
+    const key = line.toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim()
+    if (key && seen.has(key)) continue
+    if (key) seen.add(key)
+    out.push(line)
+  }
+  return out
+}
+
 export function analyseLyrics(raw: string): LyricAnalysis {
   const text = raw.trim()
-  const ls = lines(text)
-  const ws = words(text)
+  const allLines = lines(text)
+  const ls = withoutRefrains(allLines)
+  const ws = words(ls.join('\n'))
 
   if (ws.length < 40 || ls.length < 4) {
     return {
@@ -160,7 +181,7 @@ export function analyseLyrics(raw: string): LyricAnalysis {
       index: 0,
       leaning: 'inconclusive',
       wordCount: ws.length,
-      lineCount: ls.length,
+      lineCount: allLines.length,
       tooShort: true,
       note: 'Too little text to read. Stylometry needs roughly forty words and four lines before any of it means anything.',
     }
@@ -329,22 +350,59 @@ export function analyseLyrics(raw: string): LyricAnalysis {
   const total = features.reduce((a, f) => a + f.weight, 0)
   const index = features.reduce((a, f) => a + f.score * f.weight, 0) / total
 
+  /*
+   * The two directions are not symmetric, and treating them as if they were
+   * is what makes a lyric detector dangerous.
+   *
+   * Naming a street or a year is positive evidence a person wrote this. Not
+   * naming one is evidence of almost nothing — plenty of human songs are
+   * deliberately abstract, and a plain repeated chorus is the shape of most
+   * hit records ever written. Scored symmetrically, "Baby I don't wanna go"
+   * comes out looking machine-made, and a tool that says so about someone's
+   * own song has done real damage in exchange for nothing.
+   *
+   * So a generated call requires the *presence* of generation markers —
+   * stock phrasing, rigid metre, stock rhyme — and not merely the absence of
+   * human ones. Everything short of that is inconclusive, which is a cheap
+   * error where a false accusation is an expensive one.
+   */
+  const collocation = features.find((f) => f.id === 'collocation')!
+  const lineVariance = features.find((f) => f.id === 'line_variance')!
+  const rhyme = features.find((f) => f.id === 'rhyme')!
+  const specificityFeature = features.find((f) => f.id === 'specificity')!
+
+  // Each marker must be positively present, not just unremarkable.
+  const generationMarkers =
+    (collocation.value >= 0.8 ? 1 : 0) +
+    (lineVariance.value <= 0.12 ? 1 : 0) +
+    (rhyme.value >= 0.6 ? 1 : 0)
+
   const leaning =
-    index >= 0.62 ? 'reads_human_written' : index <= 0.38 ? 'reads_generated' : 'inconclusive'
+    index >= 0.62 && specificityFeature.value > 0.4
+      ? 'reads_human_written'
+      : generationMarkers >= 2 && index <= 0.42
+        ? 'reads_generated'
+        : 'inconclusive'
 
   const note =
     leaning === 'reads_human_written'
-      ? 'The writing carries particulars, irregular phrasing and vocabulary reach that generated lyrics tend not to.'
+      ? 'The writing names particulars and varies its phrasing in ways generated lyrics tend not to.'
       : leaning === 'reads_generated'
-        ? 'The writing is abstract, evenly measured and dense with high-probability phrasing — the shape a completion engine produces.'
-        : 'The measurements pull in both directions; this text does not lean either way.'
+        ? `Positive markers of generation are present: ${[
+            collocation.value >= 0.8 ? 'dense stock phrasing' : null,
+            lineVariance.value <= 0.12 ? 'near-uniform line lengths' : null,
+            rhyme.value >= 0.6 ? 'a rigid rhyme scheme' : null,
+          ]
+            .filter(Boolean)
+            .join(', ')}.`
+        : 'Nothing here points firmly either way. Abstract or repetitive writing is ordinary in songs, so its absence of particulars is not treated as evidence of a machine.'
 
   return {
     features,
     index,
     leaning,
     wordCount: ws.length,
-    lineCount: ls.length,
+    lineCount: allLines.length,
     tooShort: false,
     note,
   }

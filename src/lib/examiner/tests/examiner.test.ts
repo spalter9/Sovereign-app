@@ -369,6 +369,74 @@ and I keep not doing it`
   pass('empty input yields no lines', segmentLines('   ').length === 0)
 }
 
+// ── the error that must not happen ───────────────────────────────────────
+// Calling someone's own song machine-made is expensive and irreversible;
+// saying "inconclusive" costs nothing. These pin that asymmetry, using the
+// plainest, most repetitive human writing there is — which is the shape of
+// most hit records and exactly what a symmetric scorer condemns.
+{
+  const plainPop = `Baby I don't wanna go
+Baby I don't wanna go
+You know I love you so
+Baby I don't wanna go
+
+Every time you walk away
+I got nothing left to say
+Tell me that you're gonna stay
+Baby I don't wanna go`
+
+  const blues = `Woke up this morning
+Trouble on my mind
+Woke up this morning
+Trouble on my mind
+My baby done left me
+And she left me far behind
+
+Got no place to go now
+Got no place to be
+Got no place to go now
+Got no place to be
+The river keeps on running
+But it don't run to me`
+
+  const gospel = `I will lift my eyes
+To the hills above
+Where my help comes from
+In the arms of love
+
+Though the valley's deep
+And the night is long
+He will keep my soul
+He will be my song`
+
+  for (const [name, text] of [['a plain repeated chorus', plainPop], ['a spare blues', blues], ['an abstract hymn', gospel]] as [string, string][]) {
+    const a = analyseLyrics(text)
+    pass(`${name} is never called generated`, a.leaning !== 'reads_generated',
+      `${a.leaning} at ${(a.index * 100).toFixed(1)}`)
+  }
+
+  // A refrain sung four times is one piece of writing. Counting the repeats
+  // drives line variance and vocabulary reach to the floor and makes every
+  // chorus-driven song look machine-regular.
+  const once = analyseLyrics(plainPop)
+  const thrice = analyseLyrics(`${plainPop}\n\n${plainPop}\n\n${plainPop}`)
+  pass('repeating a chorus does not change the reading', once.leaning === thrice.leaning)
+
+  // And the other direction still fires when the markers are actually there.
+  const stock = `I'm walking through the endless night
+Chasing dreams that burn so bright
+Shattered dreams will fade away
+In your arms I'll always stay
+City lights are burning bright
+Guiding me toward the light
+Hold me close and never let go
+Through the storm we'll rise and grow`
+  const g = analyseLyrics(stock)
+  pass('dense stock phrasing with rigid metre is still caught', g.leaning === 'reads_generated',
+    `${g.leaning} at ${(g.index * 100).toFixed(1)}`)
+  pass('a generated call names the markers it found', /stock phrasing|line lengths|rhyme scheme/.test(g.note))
+}
+
 console.log(
   failures === 0
     ? `\nAll ${checks} examiner invariants hold.\n`

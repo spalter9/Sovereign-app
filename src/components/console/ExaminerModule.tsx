@@ -14,6 +14,7 @@ import {
   type ExaminerFinding,
   type LyricReading,
 } from '../../lib/examiner/client'
+import { analyseLyrics, type LyricAnalysis } from '../../lib/examiner/lyric-analysis'
 import {
   recordLyrics,
   toDeclarationJson,
@@ -529,6 +530,8 @@ const LEANING_TONE: Record<string, string> = {
  */
 function LyricScanPanel() {
   const [reading, setReading] = useState<LyricReading | null>(null)
+  const [text, setText] = useState('')
+  const [analysis, setAnalysis] = useState<LyricAnalysis | null>(null)
   const [busy, setBusy] = useState(false)
   const [stage, setStage] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -539,42 +542,80 @@ function LyricScanPanel() {
         <p className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
           Lyric scan — writing style
         </p>
-        {reading ? (
+        {analysis && !analysis.tooShort ? (
           <span
             className={`rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-              LEANING_TONE[reading.analysis.leaning] ?? LEANING_TONE.inconclusive
+              LEANING_TONE[analysis.leaning] ?? LEANING_TONE.inconclusive
             }`}
           >
-            {words(reading.analysis.leaning)}
+            {words(analysis.leaning)}
           </span>
         ) : null}
       </div>
 
       <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-        Transcribes the separated vocal in this browser, then measures the writing for the
-        things that differ between written and generated lyrics.
+        Paste the lyrics, or have the vocal transcribed and correct what comes back. Either way
+        the writing is measured here in this browser.
       </p>
 
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => {
-          setBusy(true)
-          setError(null)
-          readLyricsFromAudio((s) => setStage(s))
-            .then(setReading)
-            .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Lyric scan failed.'))
-            .finally(() => setBusy(false))
+      <textarea
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value)
+          setAnalysis(null)
         }}
-        className="mt-3 w-full rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-40"
-      >
-        {busy ? `${stage}…` : 'Scan the lyrics'}
-      </button>
+        rows={7}
+        placeholder="Paste the lyrics — or use Transcribe and edit what comes back…"
+        aria-label="Lyrics to scan"
+        className="mt-3 w-full rounded-lg border border-slate-700 bg-[#050a15] px-3 py-2 font-mono text-[11px] leading-relaxed text-slate-200 outline-none focus:border-cyan-500/60"
+      />
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!text.trim()}
+          onClick={() => setAnalysis(analyseLyrics(text))}
+          className="flex-1 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-40"
+        >
+          Scan this writing
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true)
+            setError(null)
+            readLyricsFromAudio((s) => setStage(s))
+              .then((r) => {
+                setReading(r)
+                // Recognition on a sung vocal is imperfect, so the transcript
+                // lands in the editable box rather than straight into a
+                // verdict. The reading is only ever as good as the words.
+                setText(r.transcript.lines.join('\n'))
+                setAnalysis(null)
+              })
+              .catch((e: unknown) =>
+                setError(e instanceof Error ? e.message : 'Transcription failed.'),
+              )
+              .finally(() => setBusy(false))
+          }}
+          className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-300 transition hover:border-cyan-500/40 hover:text-cyan-300 disabled:opacity-40"
+        >
+          {busy ? `${stage}…` : 'Transcribe the vocal'}
+        </button>
+      </div>
 
       {busy ? (
         <p className="mt-2 text-[10px] text-slate-500">
-          First run downloads a speech model (~40 MB). It is cached afterwards, and the audio
-          never leaves this machine.
+          First run downloads a speech model (~40 MB), cached afterwards. The audio never leaves
+          this machine.
+        </p>
+      ) : null}
+
+      {reading ? (
+        <p className="mt-2 font-mono text-[10px] text-slate-500">
+          Transcribed {reading.transcript.analysedSec.toFixed(0)}s with {reading.transcript.model}
+          {' '}— check the words before trusting the reading.
         </p>
       ) : null}
 
@@ -584,48 +625,44 @@ function LyricScanPanel() {
         </p>
       ) : null}
 
-      {reading ? (
-        <div className="mt-3 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400"
-                style={{ width: `${Math.round(reading.analysis.index * 100)}%` }}
-              />
-            </div>
-            <span className="font-mono text-xs tabular-nums text-slate-200">
-              {(reading.analysis.index * 100).toFixed(0)} / 100
-            </span>
-          </div>
-          <p className="text-[11px] leading-relaxed text-slate-300">{reading.analysis.note}</p>
-
-          <dl className="space-y-1.5 border-t border-slate-800 pt-3">
-            {reading.analysis.features.map((f) => (
-              <div key={f.id} className="flex flex-wrap items-baseline justify-between gap-2">
-                <dt className="text-[11px] text-slate-300">{f.label}</dt>
-                <dd className="font-mono text-[10px] text-slate-500">
-                  {f.reading} <span className="text-slate-600">(w {f.weight.toFixed(2)})</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          <details className="border-t border-slate-800 pt-3">
-            <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wider text-slate-500">
-              Transcript · {reading.analysis.wordCount} words · {reading.transcript.model}
-            </summary>
-            <p className="mt-2 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-slate-400">
-              {reading.transcript.lines.join('\n')}
-            </p>
-          </details>
-
-          <p className="text-[10px] leading-relaxed text-amber-300/90">
-            A leaning from writing style, not proof of who wrote it. Transcription errors feed
-            straight into these measurements, and a deliberately plain human lyric will read
-            low. Use it alongside the authorship record below, which is evidence rather than
-            inference.
+      {analysis ? (
+        analysis.tooShort ? (
+          <p className="mt-3 rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-[11px] text-slate-400">
+            {analysis.note}
           </p>
-        </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400"
+                  style={{ width: `${Math.round(analysis.index * 100)}%` }}
+                />
+              </div>
+              <span className="font-mono text-xs tabular-nums text-slate-200">
+                {(analysis.index * 100).toFixed(0)} / 100
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-300">{analysis.note}</p>
+
+            <dl className="space-y-1.5 border-t border-slate-800 pt-3">
+              {analysis.features.map((f) => (
+                <div key={f.id} className="flex flex-wrap items-baseline justify-between gap-2">
+                  <dt className="text-[11px] text-slate-300">{f.label}</dt>
+                  <dd className="font-mono text-[10px] text-slate-500">
+                    {f.reading} <span className="text-slate-600">(w {f.weight.toFixed(2)})</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <p className="text-[10px] leading-relaxed text-amber-300/90">
+              A leaning from writing style, not proof of authorship. It calls writing generated
+              only when the markers are positively present — abstract or repetitive lyrics are
+              ordinary in songs and are never treated as evidence of a machine.
+            </p>
+          </div>
+        )
       ) : null}
     </div>
   )
