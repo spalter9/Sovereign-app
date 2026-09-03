@@ -14,7 +14,7 @@ import { separate } from '../separate'
 import { onsetGridDeviation, spectralCliffHz } from '../features'
 import { estimateTempo, onsetStrength, refineOnsets, detectOnsets, trackF0, lpc, lpcFormants } from '../analysis'
 import { HOP } from '../stft'
-import { measureNoiseFloor, readNoiseFloor } from '../provenance'
+import { measureNoiseFloor, readNoiseFloor, scoreProvenance, spectralFluxSd, scoreTrackProvenance } from '../provenance'
 import { normaliseLyrics, recordLyrics, verifyRecord } from '../lyrics'
 import { analyseLyrics } from '../lyric-analysis'
 import { segmentLines, assessTranscript } from '../transcribe'
@@ -469,6 +469,63 @@ Through the storm we'll rise and grow`
     `${firehose.wordsPerSecond.toFixed(1)} words/sec`)
   const warned = assessTranscript(segmentLines(garbage[0]!), 45)
   pass('the refusal says what to do about it', /correct it before scanning/i.test(warned.warning ?? ''))
+}
+
+// ── the provenance classifier ────────────────────────────────────────────
+// Three measurements fitted to eight tracks of known provenance. These pin
+// the mechanics, not the accuracy — accuracy was established by holding each
+// track out, which cannot be re-run from synthetic signal.
+{
+  const n = SR * 40
+  const make = (pink: boolean) => {
+    const out: Float64Array[] = [new Float64Array(n), new Float64Array(n)]
+    const states = new Float64Array(12)
+    for (let c = 0; c < 2; c += 1) {
+      states.fill(0)
+      for (let i = 0; i < n; i += 1) {
+        const white = Math.random() * 2 - 1
+        if (!pink) {
+          out[c]![i] = white * 0.05
+          continue
+        }
+        let sum = 0
+        for (let k = 0; k < 12; k += 1) {
+          if (i % (1 << k) === 0) states[k] = Math.random() * 2 - 1
+          sum += states[k]!
+        }
+        out[c]![i] = (sum / 12) * 0.05
+      }
+    }
+    return out
+  }
+
+  const white = make(false)
+  const pink = make(true)
+
+  pass('spectral flux variability is measurable', spectralFluxSd(white, SR) !== null)
+  const a = scoreProvenance(white, SR)
+  const b = scoreProvenance(pink, SR)
+  pass('the classifier scores a signal it can measure', a.scored && b.scored)
+  pass('a score is a probability', a.pGenerated >= 0 && a.pGenerated <= 1)
+  // The floor slope carries the largest weight, so a flatter floor must move
+  // the score toward generated. If this inverts, the model has been wired up
+  // backwards and every verdict is upside down.
+  pass('a flatter noise floor scores more generated than a steeper one',
+    a.pGenerated > b.pGenerated,
+    `white ${a.pGenerated.toFixed(3)} vs pink ${b.pGenerated.toFixed(3)}`)
+
+  const silent = scoreProvenance([new Float64Array(SR * 8), new Float64Array(SR * 8)], SR)
+  pass('silence yields no provenance score', !silent.scored)
+
+  const track = scoreTrackProvenance(white, SR)
+  pass('a whole track gets a reading', track.excerpts.length >= 1)
+  pass('a track reading is one of three states',
+    ['recorded', 'generated', 'inconclusive'].includes(track.resembles))
+  // A probability near even odds must stay undecided rather than being
+  // rounded into a verdict.
+  const undecided = scoreTrackProvenance(
+    [new Float64Array(SR * 8), new Float64Array(SR * 8)], SR)
+  pass('an unmeasurable track is inconclusive', undecided.resembles === 'inconclusive')
 }
 
 console.log(

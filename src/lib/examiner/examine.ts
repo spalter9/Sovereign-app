@@ -2,7 +2,13 @@ import { analyseContainer } from './container'
 import { clearsAllPlatforms, evaluateDelivery, type DeliveryVerdict } from './delivery-targets'
 import { FEATURE_EXTRACTORS } from './features'
 import { separate, type SourceName } from './separate'
-import { measureNoiseFloor, readNoiseFloor, type FloorVerdict } from './provenance'
+import {
+  measureNoiseFloor,
+  readNoiseFloor,
+  scoreTrackProvenance,
+  type FloorVerdict,
+  type TrackProvenance,
+} from './provenance'
 import {
   authorshipIndex,
   claimEligibility,
@@ -57,6 +63,11 @@ export type ExaminerFinding = {
    * that works into several that do not would hide both facts.
    */
   floor: FloorVerdict
+  /**
+   * The validated provenance classifier: three measurements combined, scored
+   * across several passages of the track. This is what the verdict uses.
+   */
+  provenance: TrackProvenance
   /**
    * The separated vocal, kept so lyrics can be transcribed without paying for
    * separation twice. Dropped before the finding crosses back to the page.
@@ -192,12 +203,14 @@ export function examine(
 
   const index = authorshipIndex(stems)
 
-  onProgress?.('Reading the noise floor', 0.95)
+  onProgress?.('Reading provenance', 0.94)
   const floor = readNoiseFloor(measureNoiseFloor(planar, audio.sampleRate))
+  const provenance = scoreTrackProvenance(planar, audio.sampleRate)
 
   onProgress?.('Drafting the limitation of claim', 0.97)
   return {
     floor,
+    provenance,
     vocalChannels: separation.vocals.channels,
     fileName: meta.fileName,
     sha256: meta.sha256,

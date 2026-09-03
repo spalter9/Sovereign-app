@@ -1,4 +1,4 @@
-import type { FloorVerdict } from './provenance'
+import type { TrackProvenance } from './provenance'
 import type { LyricAnalysis } from './lyric-analysis'
 
 /**
@@ -10,11 +10,14 @@ import type { LyricAnalysis } from './lyric-analysis'
  * reports them separately and then says what the pair supports.
  *
  * It reports only what has been validated. The per-stem performance
- * measurements are excluded from this verdict entirely: tested against eight
- * tracks of known provenance, not one of their features separated generated
- * from recorded audio, and a verdict built on them would be confident noise.
- * What is used is the noise-floor reading, which did separate, and the lyric
- * stylometry, which is reported as a leaning and never as proof.
+ * measurements are excluded entirely: tested against eight tracks of known
+ * provenance, not one of their features separated generated from recorded
+ * audio, and a verdict built on them would be confident noise.
+ *
+ * The recording side uses the three-measurement provenance classifier, which
+ * was validated by holding each of those eight tracks out in turn — 89.6% per
+ * excerpt, and all eight tracks on the correct side when held out. The lyric
+ * side is stylometry, reported as a leaning and never as proof.
  */
 
 export type SideReading = {
@@ -37,37 +40,39 @@ export type CombinedVerdict = {
 }
 
 export function combineVerdict(
-  floor: FloorVerdict,
+  provenance: TrackProvenance,
   lyrics: LyricAnalysis | null,
 ): CombinedVerdict {
   const caveats: string[] = []
 
   // ── the recording ──────────────────────────────────────────────────────
   let recording: SideReading
-  if (floor.resembles === 'generated') {
+  if (provenance.resembles === 'generated') {
     recording = {
       side: 'recording',
       finding: 'The recording looks machine-generated.',
       strength: 'measured',
-      detail: floor.note,
+      detail: provenance.note,
     }
-  } else if (floor.resembles === 'recorded') {
+  } else if (provenance.resembles === 'recorded') {
     recording = {
       side: 'recording',
       finding: 'The recording looks like a physical capture.',
       strength: 'measured',
-      detail: floor.note,
+      detail: provenance.note,
     }
   } else {
     recording = {
       side: 'recording',
       finding: 'The recording cannot be placed either way.',
       strength: 'not_established',
-      detail: floor.note,
+      detail: provenance.note,
     }
   }
   caveats.push(
-    'The recording reading rests on one measurement — the colour of the noise floor — fitted to 32 excerpts from 8 tracks of known provenance. It is a strong lead, not a proven detector.',
+    `The recording reading combines three measurements, fitted to 8 tracks of known provenance and validated by holding each one out: 89.6% of excerpts correct, and all 8 tracks on the correct side. Eight tracks is still a small sample${
+      provenance.excerpts.length > 1 ? `; this reading averages ${provenance.excerpts.length} passages` : ''
+    }.`,
   )
 
   // ── the lyrics ─────────────────────────────────────────────────────────
@@ -110,8 +115,8 @@ export function combineVerdict(
   }
 
   // ── what the pair supports ─────────────────────────────────────────────
-  const generatedAudio = floor.resembles === 'generated'
-  const recordedAudio = floor.resembles === 'recorded'
+  const generatedAudio = provenance.resembles === 'generated'
+  const recordedAudio = provenance.resembles === 'recorded'
   const humanWords = lyricSide.finding.startsWith('The writing reads as written')
   const generatedWords = lyricSide.finding.startsWith('The writing carries markers')
 

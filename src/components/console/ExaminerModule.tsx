@@ -279,30 +279,41 @@ export function ExaminerModule() {
               both results. */}
           <div
             className={`rounded-xl border p-4 ${
-              finding.floor.resembles === 'generated'
+              finding.provenance.resembles === 'generated'
                 ? 'border-rose-700/60 bg-rose-950/20'
-                : finding.floor.resembles === 'recorded'
+                : finding.provenance.resembles === 'recorded'
                   ? 'border-emerald-700/60 bg-emerald-950/20'
                   : 'border-slate-700 bg-slate-900'
             }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
-                Noise-floor provenance
+                Recording provenance
               </p>
               <span className="font-mono text-[10px] tabular-nums text-slate-400">
-                slope {fmt(finding.floor.reading.slope, 2)} · flatness{' '}
-                {fmt(finding.floor.reading.flatness, 3)}
+                P(generated) {(finding.provenance.pGenerated * 100).toFixed(0)}% · slope{' '}
+                {fmt(finding.provenance.detail?.floorSlopeAll ?? null, 2)} · flux{' '}
+                {fmt(finding.provenance.detail?.specFluxSd ?? null, 3)}
               </span>
             </div>
             <p className="mt-2 text-[12px] font-bold leading-relaxed text-slate-200">
-              Floor resembles {finding.floor.resembles} audio.
+              Recording resembles {finding.provenance.resembles} audio.
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{finding.floor.note}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              {finding.provenance.note}
+            </p>
+            {finding.provenance.excerpts.length > 1 ? (
+              <p className="mt-2 font-mono text-[10px] text-slate-600">
+                passages:{' '}
+                {finding.provenance.excerpts.map((p) => (p * 100).toFixed(0)).join(' · ')}
+              </p>
+            ) : null}
             <p className="mt-2 text-[10px] leading-relaxed text-amber-300/90">
-              Provisional. Fitted to 32 excerpts from 8 tracks of known provenance, where a
-              single threshold classified 90.6% correctly — a lead, not a proven detector.
-              The performance measurements above separated nothing on that same material.
+              Three measurements combined — noise-floor colour, its slope in the top octaves,
+              and how much the frame-to-frame spectral change varies. Fitted to 8 tracks of
+              known provenance and validated by holding each track out in turn: 89.6% of
+              excerpts correct, all 8 tracks on the correct side. Eight tracks is a small
+              sample; more material of known origin is what would harden it.
             </p>
           </div>
 
@@ -647,7 +658,7 @@ function CombinedVerdictPanel({
   finding: ExaminerFinding
   lyrics: LyricAnalysis | null
 }) {
-  const verdict = combineVerdict(finding.floor, lyrics)
+  const verdict = combineVerdict(finding.provenance, lyrics)
   const sides = [verdict.recording, verdict.lyrics]
 
   return (
