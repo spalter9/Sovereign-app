@@ -536,6 +536,15 @@ function LyricScanPanel() {
   const [stage, setStage] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  // A transcript the gate rejected cannot be scanned until someone has
+  // actually changed it. Analysing recogniser noise would produce a confident
+  // reading of something nobody sang, which is the one output this must never
+  // give — editing it is the whole point of showing it.
+  const unreviewedGarbage =
+    reading !== null &&
+    !reading.transcript.quality.usable &&
+    text.trim() === reading.transcript.lines.join('\n').trim()
+
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -573,7 +582,12 @@ function LyricScanPanel() {
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={!text.trim()}
+          disabled={!text.trim() || unreviewedGarbage}
+          title={
+            unreviewedGarbage
+              ? 'Correct the transcript first — it does not look like lyrics.'
+              : undefined
+          }
           onClick={() => setAnalysis(analyseLyrics(text))}
           className="flex-1 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-40"
         >
@@ -613,10 +627,18 @@ function LyricScanPanel() {
       ) : null}
 
       {reading ? (
-        <p className="mt-2 font-mono text-[10px] text-slate-500">
-          Transcribed {reading.transcript.analysedSec.toFixed(0)}s with {reading.transcript.model}
-          {' '}— check the words before trusting the reading.
-        </p>
+        <div className="mt-2 space-y-2">
+          <p className="font-mono text-[10px] text-slate-500">
+            Transcribed {reading.transcript.analysedSec.toFixed(0)}s with{' '}
+            {reading.transcript.model} — check the words before trusting the reading.
+          </p>
+          {reading.transcript.quality.warning ? (
+            <p className="flex items-start gap-2 rounded-lg border border-amber-700/60 bg-amber-950/30 px-3 py-2 text-[11px] font-bold leading-relaxed text-amber-200">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+              {reading.transcript.quality.warning}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {error ? (

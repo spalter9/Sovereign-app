@@ -17,7 +17,7 @@ import { HOP } from '../stft'
 import { measureNoiseFloor, readNoiseFloor } from '../provenance'
 import { normaliseLyrics, recordLyrics, verifyRecord } from '../lyrics'
 import { analyseLyrics } from '../lyric-analysis'
-import { segmentLines } from '../transcribe'
+import { segmentLines, assessTranscript } from '../transcribe'
 
 const SR = 44100
 let failures = 0
@@ -435,6 +435,40 @@ Through the storm we'll rise and grow`
   pass('dense stock phrasing with rigid metre is still caught', g.leaning === 'reads_generated',
     `${g.leaning} at ${(g.index * 100).toFixed(1)}`)
   pass('a generated call names the markers it found', /stock phrasing|line lengths|rhyme scheme/.test(g.note))
+}
+
+// ── transcript quality gate ──────────────────────────────────────────────
+// Recognition on a sung vocal can fail into fluent nonsense — real words in
+// an order nobody sang. Reading the writing style of that yields a confident
+// verdict about noise, which is the worst output this tool could produce.
+// These use actual failure output from a recogniser run on a real vocal.
+{
+  const garbage = [
+    "the whole fat and have read la hay and what is behind had done and head room and were leaving new to hit you nowhere and haunt me see and move on hand and you lose a lonely it will in good and me a saying even if the hood and long hey i'm home to",
+    "and are fat in thailand while the is hand and and i said i need and thumb and and out while fit and i have it it is supposed to do and that is supposed to adhere to it and the the change of that and the like this on thirtieth",
+  ]
+  const real = [
+    "baby i don't wanna go baby i don't wanna go you know i love you so baby i don't wanna go every time you walk away i got nothing left to say tell me that you're gonna stay baby i don't wanna go and i don't wanna go",
+    "she kept the metro card from twenty eleven in the drawer with the batteries that don't work i said that's junk she said it's tuesday and i didn't have an answer for that now the drawer's mine and the card's still in it and the batteries still don't work and i keep meaning to throw all of it out and the batteries still don't work",
+  ]
+  for (const [i, text] of garbage.entries()) {
+    const q = assessTranscript(segmentLines(text), 45)
+    pass(`recogniser noise #${i + 1} is refused`, !q.usable, `repetition ${q.repetition.toFixed(3)}`)
+  }
+  for (const [i, text] of real.entries()) {
+    const q = assessTranscript(segmentLines(text), 45)
+    pass(`a real lyric #${i + 1} passes the gate`, q.usable, `repetition ${q.repetition.toFixed(3)}`)
+  }
+  const empty = assessTranscript([], 45)
+  pass('an empty transcript is refused', !empty.usable)
+  const firehose = assessTranscript(
+    segmentLines(Array.from({ length: 400 }, () => 'word here now').join(' ')),
+    30,
+  )
+  pass('an implausible word rate is refused', !firehose.usable,
+    `${firehose.wordsPerSecond.toFixed(1)} words/sec`)
+  const warned = assessTranscript(segmentLines(garbage[0]!), 45)
+  pass('the refusal says what to do about it', /correct it before scanning/i.test(warned.warning ?? ''))
 }
 
 console.log(
