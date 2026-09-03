@@ -198,7 +198,7 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
 /* ── the classifier ──────────────────────────────────────────────────────
  *
  * Three measurements, combined by a class-weighted logistic model fitted on
- * 41 tracks of known provenance (25 generated, 16 recorded) and validated
+ * 46 tracks of known provenance (25 generated, 21 recorded) and validated
  * by holding each track out in turn.
  *
  * The twenty-track fit exists because the eight-track one failed. Run blind on
@@ -206,11 +206,14 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
  * them machine-generated — the small-sample overfit made real. Widening the
  * human set to sixteen tracks spanning decades, studios and genres (a 1950s
  * Elvis master and a modern bedroom mix both now read as recorded) is what
- * fixed it: held out over 41 tracks — and, more strictly, holding out whole song-
- * groups so remixes of one song cannot leak between train and test — the
- * model reaches 83% balanced accuracy (92% of generated tracks caught, 75%
- * of recorded ones cleared). That figure has risen 77 -> 80 -> 83 as the
- * sample grew,
+ * fixed it: held out over 46 tracks — holding out whole song-groups so variants of one
+ * song cannot leak between train and test — the model reaches 77% balanced
+ * accuracy (88% of generated tracks caught, 67% of recorded ones cleared).
+ * That is DOWN from a 83% figure measured on a narrower human set: adding
+ * diverse human material (a New Jack Swing remix, other genres) revealed that
+ * true specificity on recorded audio is lower than a narrow set suggested.
+ * The honest operating range is high-70s to low-80s depending on how far the
+ * material strays from what has been seen,
  * which is the honest accuracy of audio-only detection — a screening lean,
  * never proof.
  *
@@ -228,10 +231,10 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
 
 const MODEL = {
   features: ['specFluxSd', 'stereoCohHi', 'specFluxKurt'] as const,
-  mean: [0.960656, 0.79301, 6.590988],
-  sd: [0.089822, 0.194008, 1.148056],
-  weights: [-0.621925, 0.902833, 0.896794],
-  bias: 0.1714,
+  mean: [0.964358, 0.789576, 6.558244],
+  sd: [0.090212, 0.196784, 1.132335],
+  weights: [-0.700915, 0.896256, 0.917743],
+  bias: 0.11569,
 } as const
 
 export type ProvenanceScore = {

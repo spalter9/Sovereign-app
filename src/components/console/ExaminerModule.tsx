@@ -309,7 +309,7 @@ export function ExaminerModule() {
               </p>
             ) : null}
             <p className="mt-2 text-[10px] leading-relaxed text-amber-300/90">
-              A screening signal, ~83% accurate held out over 41 tracks of known provenance —
+              A screening signal, ~77% accurate held out over 46 tracks of known provenance —
               real information, but far from proof, and it abstains whenever a track is not
               clearly one or the other. It should never be the basis of a filing; the
               authorship record below is what carries that weight.
