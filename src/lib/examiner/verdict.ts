@@ -16,7 +16,7 @@ import type { LyricAnalysis } from './lyric-analysis'
  *
  * The recording side uses the three-measurement provenance classifier. On 29
  * tracks of known provenance, validated by holding each track out, it reaches
- * 77% balanced accuracy — real signal, but nowhere near proof, and it fell as
+ * 78% balanced accuracy — real signal, but nowhere near proof, and it fell as
  * the sample grew, so it is treated as a weak screening lean that abstains
  * whenever it is unsure and never drives the finding. The lyric side is
  * stylometry, also a leaning and never proof. What a filing actually rests on
@@ -74,7 +74,7 @@ export function combineVerdict(
     }
   }
   caveats.push(
-    `The recording reading is a screening signal, not proof: three measurements combined, ~77% accurate held out over 29 tracks of known provenance, and weaker on unfamiliar material. It abstains when unsure${
+    `The recording reading is a screening signal, not proof: three measurements combined, ~78% accurate held out over 33 tracks of known provenance, and weaker on unfamiliar material. It abstains when unsure${
       provenance.excerpts.length > 1 ? ` and averages ${provenance.excerpts.length} passages` : ''
     }. A filing should rest on the authorship record below, not on this.`,
   )

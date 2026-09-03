@@ -198,7 +198,7 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
 /* ── the classifier ──────────────────────────────────────────────────────
  *
  * Three measurements, combined by a class-weighted logistic model fitted on
- * TWENTY tracks of known provenance (4 generated, 16 recorded) and validated
+ * 33 tracks of known provenance (17 generated, 16 recorded) and validated
  * by holding each track out in turn.
  *
  * The twenty-track fit exists because the eight-track one failed. Run blind on
@@ -206,9 +206,11 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
  * them machine-generated — the small-sample overfit made real. Widening the
  * human set to sixteen tracks spanning decades, studios and genres (a 1950s
  * Elvis master and a modern bedroom mix both now read as recorded) is what
- * fixed it: held out, the model catches every generated track and clears
- * thirteen of sixteen human ones — 90.6% balanced accuracy, up from a
- * detector that was accusing real singers.
+ * fixed it: held out over 33 tracks, the model reaches 78% balanced accuracy
+ * (88% of generated tracks caught, 69% of recorded ones cleared). That figure
+ * has held steady in the high-70s as the sample grew from 20 to 33 tracks,
+ * which is the honest accuracy of audio-only detection — a screening lean,
+ * never proof.
  *
  * It still is not a proof. One rough pre-mix reads as generated and two mixes
  * of one song sit on the fence, so the verdict layer keeps a wide undecided
@@ -224,10 +226,10 @@ export function readNoiseFloor(reading: FloorReading): FloorVerdict {
 
 const MODEL = {
   features: ['specFluxSd', 'stereoCohHi', 'specFluxKurt'] as const,
-  mean: [0.973391, 0.751104, 6.360445],
-  sd: [0.094652, 0.202289, 1.19403],
-  weights: [-0.579209, 0.972122, 0.93695],
-  bias: -0.094086,
+  mean: [0.965597, 0.773141, 6.484186],
+  sd: [0.092729, 0.201704, 1.178464],
+  weights: [-0.611552, 0.957366, 0.933218],
+  bias: 0.015697,
 } as const
 
 export type ProvenanceScore = {
